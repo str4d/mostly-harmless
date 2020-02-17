@@ -1,0 +1,3 @@
+/rage https://github.com/str4d/rage 302
+/rage/report https://github.com/str4d/rage/issues/new/choose 302
+/rage/info/refs service=git-upload-pack https://github.com/str4d/rage.git/info/refs?service=git-upload-pack 302
