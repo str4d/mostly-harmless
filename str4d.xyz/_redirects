@@ -3,3 +3,4 @@
 /rage/info/refs service=git-upload-pack https://github.com/str4d/rage.git/info/refs?service=git-upload-pack 302
 
 /wage https://github.com/str4d/wage 302
+/wage/report https://github.com/str4d/wage/issues/new/choose 302
