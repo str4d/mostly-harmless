@@ -4,3 +4,6 @@
 
 /wage https://github.com/str4d/wage 302
 /wage/report https://github.com/str4d/wage/issues/new/choose 302
+
+/age-plugin-yubikey https://github.com/str4d/age-plugin-yubikey 302
+/age-plugin-yubikey/report https://github.com/str4d/age-plugin-yubikey/issues/new/choose 302
