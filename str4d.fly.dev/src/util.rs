@@ -55,6 +55,24 @@ where
     ///
     /// Requests with host `<from>` will be redirected to `<to><path_and_query>`.
     pub(crate) fn redirect(self, from: &'static str, to: &'static str) -> Self {
+        self.redirect_inner(from, to, Redirect::permanent)
+    }
+
+    /// Adds a temporary (HTTP 307) redirect between two hosts.
+    ///
+    /// Requests with host `<from>` will be redirected to `<to><path_and_query>`.
+    pub(crate) fn redirect_temporary(self, from: &'static str, to: &'static str) -> Self {
+        self.redirect_inner(from, to, Redirect::temporary)
+    }
+
+    /// Adds a permanent (HTTP 308) redirect between two hosts.
+    ///
+    /// Requests with host `<from>` will be redirected to `<to><path_and_query>`.
+    fn redirect_inner<F>(self, from: &'static str, to: &'static str, redirect: F) -> Self
+    where
+        F: FnOnce(&str) -> Redirect,
+        F: Clone + Send + 'static,
+    {
         self.handle(
             from,
             Router::new().fallback(move |req: Request<B>| async move {
@@ -63,7 +81,7 @@ where
                     to,
                     req.uri().path_and_query().map(|p| p.as_str()).unwrap_or(""),
                 );
-                Redirect::permanent(&to_uri)
+                redirect(&to_uri)
             }),
         )
     }

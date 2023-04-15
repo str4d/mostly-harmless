@@ -6,6 +6,7 @@ use tracing_subscriber::fmt::format::FmtSpan;
 
 mod util;
 
+mod siso_dev;
 mod str4d_xyz;
 
 #[tokio::main]
@@ -28,6 +29,8 @@ async fn main() {
     let app = util::Multiplexer::new()
         .redirect("www.str4d.xyz", "https://str4d.xyz")
         .handle("str4d.xyz", str4d_xyz::build())
+        .redirect_temporary("www.siso.dev", "https://siso.dev")
+        .handle("siso.dev", siso_dev::build())
         .layer(TraceLayer::new_for_http());
 
     // IPv6 + IPv6 any addr
