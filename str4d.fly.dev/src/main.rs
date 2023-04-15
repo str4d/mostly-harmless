@@ -10,6 +10,8 @@ mod str4d_xyz;
 
 #[tokio::main]
 async fn main() {
+    println!("Starting str4d.fly.dev binary");
+
     // Filter traces based on the RUST_LOG env var, or, if it's not set,
     // default to show info-level details.
     let filter = std::env::var("RUST_LOG").unwrap_or_else(|_| "info".to_owned());
