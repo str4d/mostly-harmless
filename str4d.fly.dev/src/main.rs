@@ -12,8 +12,7 @@ mod str4d_xyz;
 async fn main() {
     // Filter traces based on the RUST_LOG env var, or, if it's not set,
     // default to show info-level details.
-    let filter = std::env::var("RUST_LOG")
-        .unwrap_or_else(|_| "axum=info,str4d-fly-dev=info,tower_http=info,tracing=info".to_owned());
+    let filter = std::env::var("RUST_LOG").unwrap_or_else(|_| "info".to_owned());
 
     tracing_subscriber::fmt()
         // Use the filter we built above to determine which traces to record.
@@ -23,6 +22,7 @@ async fn main() {
         .with_span_events(FmtSpan::CLOSE)
         .init();
 
+    tracing::info!("Starting server");
     let app = util::Multiplexer::new()
         .redirect("www.str4d.xyz", "https://str4d.xyz")
         .handle("str4d.xyz", str4d_xyz::build())
