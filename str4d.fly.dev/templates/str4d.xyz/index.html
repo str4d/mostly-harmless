@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Jack Grigg / str4d{% endblock %}
+
+{% block content %}
+<h1>Jack Grigg</h1>
+<p>I'm a cryptographic engineer trying to improve people's privacy.</p>
+<p>You can find me online at these locations (activity not guaranteed):</p>
+<ul>
+    <li><a rel="me" href="https://github.com/str4d">GitHub</a></li>
+    <li><a rel="me" href="https://staging.bsky.app/profile/did:plc:bvdrfwiamgi5leqs63q2duro">Bluesky</a></li>
+    <li><a rel="me" href="https://abyssdomain.expert/@str4d">Mastodon</a></li>
+    <li><a rel="me" href="https://cohost.org/str4d">cohost</a></li>
+    <li><a rel="me" href="https://twitter.com/str4d">The Bird Site</a></li>
+</ul>
+
+<h2 id="specs">Specifications</h2>
+<p>Some of the specifications I have helped to design and/or write:</p>
+<ul>
+    <li><a href="https://zips.z.cash/protocol/protocol.pdf">The Zcash Protocol</a>, and <a
+            href="https://zips.z.cash">various Zcash Improvement Proposals</a>.</li>
+    <li><a href="https://datatracker.ietf.org/doc/draft-irtf-cfrg-ristretto255-decaf448/">IRTF draft: The ristretto255
+            and decaf448 Groups</a></li>
+    <li><a href="https://github.com/C2SP/C2SP/pull/5">The age plugin specification</a></li>
+</ul>
+
+<h2 id="software">Software</h2>
+<p>Some of the software I have built and/or maintain:</p>
+<ul>
+    <li><a href="/rage"><code>rage</code></a>: A Rust implementation of <a href="https://age-encryption.org">age file
+            encryption</a>. Also available as <a href="https://crates.io/crates/age">a Rust crate</a>!</li>
+    <li><a href="/age-plugin-yubikey"><code>age-plugin-yubikey</code></a>: A plugin for age clients which enables files
+        to be encrypted to age identities stored on YubiKeys.</li>
+    <li><a href="https://z.cash">Zcash</a>: a digital currency using zero-knowledge proofs for privacy. I've been
+        one of the primary maintainers of the
+        <code>zcashd</code> full node implementation since 2016.
+    </li>
+</ul>
+{% endblock %}

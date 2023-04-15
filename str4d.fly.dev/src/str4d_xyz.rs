@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use askama::Template;
 use axum::{
     body::HttpBody,
     extract::Query,
@@ -10,12 +11,21 @@ use axum::{
 
 pub(crate) fn build() -> Router {
     Router::new()
+        .route("/", get(index))
         .nest("/rage", github_project_with_clone("str4d/rage"))
         .nest("/wage", github_project("str4d/wage"))
         .nest(
             "/age-plugin-yubikey",
             github_project("str4d/age-plugin-yubikey"),
         )
+}
+
+#[derive(Template)]
+#[template(path = "str4d.xyz/index.html")]
+struct Index {}
+
+async fn index() -> Index {
+    Index {}
 }
 
 fn github_project(project: &str) -> Router {
