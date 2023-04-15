@@ -24,6 +24,7 @@ async fn main() {
         .init();
 
     let app = util::Multiplexer::new()
+        .redirect("www.str4d.xyz", "https://str4d.xyz")
         .handle("str4d.xyz", str4d_xyz::build())
         .layer(TraceLayer::new_for_http());
 

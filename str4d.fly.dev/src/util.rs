@@ -6,7 +6,7 @@ use std::{
 
 use axum::{
     body::HttpBody,
-    response::{IntoResponse, Response},
+    response::{IntoResponse, Redirect, Response},
     routing::{future::RouteFuture, Route},
     Router,
 };
@@ -49,6 +49,23 @@ where
     pub(crate) fn handle(mut self, host: &'static str, router: Router<S, B>) -> Self {
         self.routers.insert(host, router);
         self
+    }
+
+    /// Adds a permanent (HTTP 308) redirect between two hosts.
+    ///
+    /// Requests with host `<from>` will be redirected to `<to><path_and_query>`.
+    pub(crate) fn redirect(self, from: &'static str, to: &'static str) -> Self {
+        self.handle(
+            from,
+            Router::new().fallback(move |req: Request<B>| async move {
+                let to_uri = format!(
+                    "{}{}",
+                    to,
+                    req.uri().path_and_query().map(|p| p.as_str()).unwrap_or(""),
+                );
+                Redirect::permanent(&to_uri)
+            }),
+        )
     }
 
     /// Applies a [`tower::Layer`] to all routers in the multiplexer.
