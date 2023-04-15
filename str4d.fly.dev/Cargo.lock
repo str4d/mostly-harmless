@@ -521,7 +521,9 @@ name = "str4d-fly-dev"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "hyper",
  "tokio",
+ "tower",
  "tower-http",
  "tracing",
  "tracing-subscriber",

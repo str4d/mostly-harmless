@@ -1,5 +1,10 @@
+use std::convert::Infallible;
+
+use hyper::service::make_service_fn;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::fmt::format::FmtSpan;
+
+mod util;
 
 mod str4d_xyz;
 
@@ -18,12 +23,17 @@ async fn main() {
         .with_span_events(FmtSpan::CLOSE)
         .init();
 
-    let app = str4d_xyz::build().layer(TraceLayer::new_for_http());
+    let app = util::Multiplexer::new()
+        .handle("str4d.xyz", str4d_xyz::build())
+        .layer(TraceLayer::new_for_http());
 
     // IPv6 + IPv6 any addr
     let addr = ([0, 0, 0, 0, 0, 0, 0, 0], 8080).into();
     tracing::debug!("Listening on {}", addr);
-    let server = axum::Server::bind(&addr).serve(app.into_make_service());
+    let server = axum::Server::bind(&addr).serve(make_service_fn(move |_| {
+        let app = app.clone();
+        async move { Ok::<_, Infallible>(app) }
+    }));
     if let Err(e) = server.await {
         tracing::error!("Server error: {}", e);
     }
