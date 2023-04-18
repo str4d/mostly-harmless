@@ -6,6 +6,7 @@ use tracing_subscriber::fmt::format::FmtSpan;
 
 mod util;
 
+mod cryptography_design;
 mod siso_dev;
 mod str4d_xyz;
 
@@ -31,6 +32,8 @@ async fn main() {
         .handle("str4d.xyz", str4d_xyz::build())
         .redirect_temporary("www.siso.dev", "https://siso.dev")
         .handle("siso.dev", siso_dev::build())
+        .redirect_temporary("www.cryptography.design", "https://cryptography.design")
+        .handle("cryptography.design", cryptography_design::build())
         .layer(TraceLayer::new_for_http());
 
     // IPv6 + IPv6 any addr
