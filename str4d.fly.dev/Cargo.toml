@@ -14,7 +14,7 @@ tokio = { version = "1", features = ["full"] }
 tower = "0.4"
 tower-http = { version = "0.4", features = ["trace"] }
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+tracing-subscriber = { version = "0.3.17", features = ["env-filter", "fmt"] }
 
 # Templates
 askama = { version = "0.12", features = ["with-axum"] }
