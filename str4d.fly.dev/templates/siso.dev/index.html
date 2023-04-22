@@ -11,12 +11,46 @@
             background: #2b2a33;
         }
 
+        a {
+            color: cadetblue;
+        }
+
         #content {
             color: #fbfbfe;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             font-size: medium;
-            margin: auto;
-            width: 50%;
+            padding: 15px;
+        }
+
+        @media screen and (max-width: 768px) {
+            #info h1 {
+                text-align: center;
+            }
+        }
+
+        @media screen and (min-width: 769px) {
+            #info {
+                float: left;
+                width: 50%;
+            }
+
+            #feed {
+                float: right;
+                width: 50%;
+            }
+        }
+
+        #todo ul {
+            list-style-type: none;
+        }
+
+        #todo li::before {
+            content: '☐';
+            margin-right: 5px;
+        }
+
+        #todo li.done::before {
+            content: '☑';
         }
 
         #iconheader {
@@ -27,7 +61,9 @@
         .post {
             background-color: #43424f;
             border-radius: 5px;
+            margin: auto;
             margin-bottom: 10px;
+            max-width: 500px;
             padding: 20px;
         }
 
@@ -39,8 +75,57 @@
 
 <body>
     <div id="content">
-        <div id="iconheader">🖥️</div>
+        <div id="info">
+            <h1>SISO.dev</h1>
+            <p>The goal of this project is to get Rust code running on an IBM 5150. Yes, that is probably a tall order,
+                but it should be fun! 😄</p>
+            <p>I don't have a real IBM 5150 to hand, so I'm building a clone. And I don't want to risk breaking it while
+                figuring out the Rust and LLVM backends, so I'm also trying to write a cycle-accurate emulator!</p>
+            <div id="todo">
+                <h2>To-do list:</h2>
+                <ul>
+                    <li>IBM 5150 clone:
+                        <ul>
+                            <li>Acquire parts:
+                                <ul>
+                                    <li class="done"><a href="http://www.mtmscientific.com/pc-retro.html">PC-RETRO
+                                            Motherboard Kit</a></li>
+                                    <li>ATX Power Supply</li>
+                                    <li><a href="https://x86.fr/atx2at-smart-converter/">ATX2AT Smart Converter</a></li>
+                                    <li>PS/2 to XT Keyboard Converter</li>
+                                    <li>Graphics card</li>
+                                    <li>Some abomination to convert from VGA to HDMI</li>
+                                    <li>RS232 serial card (e.g. IBM Asynchronous Adapter)</li>
+                                    <li class="done"><a href="https://biosrhythm.com/?page_id=1453">WiFi232 Internet
+                                            Modem</a></li>
+                                    <li>Case</li>
+                                </ul>
+                            </li>
+                            <li>Assemble motherboard</li>
+                        </ul>
+                    </li>
+                    <li><code>siso</code> crate:
+                        <ul>
+                            <li class="done">Basic single-threaded 5150 emulator</li>
+                            <li>Keyboard I/O</li>
+                            <li>Graphics</li>
+                            <li>Microcode emulator</li>
+                            <li><code>async</code> framework for emulating internal parallelism</li>
+                        </ul>
+                    </li>
+                    <li>Rust target <code>i088-none-eabi</code>:
+                        <ul>
+                            <li>Write LLVM backend</li>
+                            <li>Add target to Rust</li>
+                            <li>Test on <code>siso</code> emulator</li>
+                            <li>Test on IBM 5150 clone</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
         <div id="feed">
+            <div id="iconheader">🖥️</div>
             {% for post in feed %}
             <div class="post">
                 <div class="created">{{ post.ago() }}</div>
