@@ -70,6 +70,10 @@
         .post .created {
             font-size: small;
         }
+
+        .post .images img {
+            width: 100%;
+        }
     </style>
 </head>
 
@@ -131,6 +135,11 @@
                 <div class="created">{{ post.ago() }}</div>
                 <div class="text">
                     <p>{{ post.text }}</p>
+                </div>
+                <div class="images">
+                    {% for (src, alt) in post.images() %}
+                    <img src="{{ src }}" alt="{{ alt }}">
+                    {% endfor %}
                 </div>
             </div>
             {% endfor %}

@@ -1,6 +1,10 @@
 use hyper::StatusCode;
 use serde::Deserialize;
 
+fn query_url(method_id: &str) -> String {
+    format!("https://bsky.social/xrpc/{}", method_id)
+}
+
 pub(super) struct Client {
     client: reqwest::Client,
 }
@@ -13,11 +17,7 @@ impl Client {
     }
 
     async fn query(&self, method_id: &str) -> Result<reqwest::Response, Error> {
-        let resp = self
-            .client
-            .get(format!("https://bsky.social/xrpc/{}", method_id))
-            .send()
-            .await?;
+        let resp = self.client.get(query_url(method_id)).send().await?;
         let status = resp.status();
 
         if status.is_success() {
@@ -78,14 +78,54 @@ struct Record {
 #[derive(Clone, Deserialize)]
 pub(super) struct Post {
     pub(super) text: String,
+    embed: Option<PostEmbed>,
     #[serde(rename = "createdAt")]
     pub(super) created_at: chrono::DateTime<chrono::Utc>,
 }
 
 impl Post {
+    pub(super) fn images(&self) -> impl Iterator<Item = (String, &String)> + '_ {
+        self.embed.iter().flat_map(|embed| {
+            embed.images.iter().map(|i| {
+                let link = &i.image.reference.link;
+
+                (
+                    query_url(&format!(
+                        "com.atproto.sync.getBlob?did=did:plc:mzwculbn44rdeouyzjp4y6gx&cid={}",
+                        link
+                    )),
+                    &i.alt,
+                )
+            })
+        })
+    }
+
     pub(super) fn ago(&self) -> String {
         timeago::Formatter::new().convert_chrono(self.created_at, chrono::Utc::now())
     }
+}
+
+#[derive(Clone, Deserialize)]
+struct PostEmbed {
+    images: Vec<PostImage>,
+}
+
+#[derive(Clone, Deserialize)]
+struct PostImage {
+    alt: String,
+    image: PostImageData,
+}
+
+#[derive(Clone, Deserialize)]
+struct PostImageData {
+    #[serde(rename = "ref")]
+    reference: PostImageRef,
+}
+
+#[derive(Clone, Deserialize)]
+struct PostImageRef {
+    #[serde(rename = "$link")]
+    link: String,
 }
 
 #[derive(Debug)]
