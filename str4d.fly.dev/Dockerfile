@@ -21,6 +21,11 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 # Runtime image
 FROM debian:bullseye-slim
 
+# Install certificates so we can make outbound TLS connections
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates
+RUN update-ca-certificates
+
 # Run as "app" user
 RUN useradd -ms /bin/bash app
 
