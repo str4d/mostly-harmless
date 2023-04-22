@@ -1,6 +1,7 @@
 use std::convert::Infallible;
 
 use hyper::service::make_service_fn;
+use metrics_exporter_prometheus::PrometheusBuilder;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::fmt::format::FmtSpan;
 
@@ -26,6 +27,14 @@ async fn main() {
         .with_span_events(FmtSpan::CLOSE)
         .init();
 
+    tracing::info!("Starting metrics");
+    if let Err(e) = PrometheusBuilder::new()
+        .with_http_listener(([0, 0, 0, 0, 0, 0, 0, 0], 9091))
+        .install()
+    {
+        tracing::error!("Failed to install metrics server: {}", e);
+    };
+
     tracing::info!("Starting server");
     let app = util::Multiplexer::new()
         .redirect("www.str4d.xyz", "https://str4d.xyz")
@@ -34,6 +43,7 @@ async fn main() {
         .handle("siso.dev", siso_dev::build())
         .redirect_temporary("www.cryptography.design", "https://cryptography.design")
         .handle("cryptography.design", cryptography_design::build())
+        .layer(util::MetricsLayer::new())
         .layer(TraceLayer::new_for_http());
 
     // IPv6 + IPv6 any addr

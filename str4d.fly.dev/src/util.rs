@@ -1,6 +1,8 @@
 use std::{
     collections::HashMap,
     convert::Infallible,
+    future::Future,
+    pin::Pin,
     task::{Context, Poll},
 };
 
@@ -11,7 +13,27 @@ use axum::{
     Router,
 };
 use hyper::{header::HOST, Request, StatusCode};
+use metrics::increment_counter;
 use tower::{Layer, Service};
+
+fn req_host<B>(req: &Request<B>) -> Option<&str> {
+    // RFC 9112 Section 3.2.2:
+    // > When an origin server receives a request with an absolute-form of
+    // > request-target, the origin server MUST ignore the received Host header field
+    // > (if any) and instead use the host information of the request-target. Note
+    // > that if the request-target does not have an authority component, an empty
+    // > Host header field will be sent in this case.
+    // >
+    // > A server MUST accept the absolute-form in requests even though most HTTP/1.1
+    // > clients will only send the absolute-form to a proxy.
+    req.uri().host().or_else(|| {
+        req.headers()
+            .get(HOST)
+            .expect("Already validated")
+            .to_str()
+            .ok()
+    })
+}
 
 /// A multiplexer that enables a single server to serve multiple hosts with independent
 /// [`Router`]s.
@@ -131,27 +153,72 @@ where
 
     #[inline]
     fn call(&mut self, req: Request<B>) -> Self::Future {
-        // RFC 9112 Section 3.2.2:
-        // > When an origin server receives a request with an absolute-form of
-        // > request-target, the origin server MUST ignore the received Host header field
-        // > (if any) and instead use the host information of the request-target. Note
-        // > that if the request-target does not have an authority component, an empty
-        // > Host header field will be sent in this case.
-        // >
-        // > A server MUST accept the absolute-form in requests even though most HTTP/1.1
-        // > clients will only send the absolute-form to a proxy.
-        let host = req.uri().host().or_else(|| {
-            req.headers()
-                .get(HOST)
-                .expect("Already validated")
-                .to_str()
-                .ok()
-        });
-
-        if let Some(router) = host.and_then(|s| self.routers.get_mut(s)) {
+        if let Some(router) = req_host(&req).and_then(|s| self.routers.get_mut(s)) {
             router.call(req)
         } else {
             self.fallback.call(req)
         }
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct MetricsLayer {}
+
+impl MetricsLayer {
+    pub(crate) fn new() -> Self {
+        Self {}
+    }
+}
+
+impl<S> Layer<S> for MetricsLayer {
+    type Service = MetricsService<S>;
+
+    fn layer(&self, inner: S) -> Self::Service {
+        MetricsService { inner }
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct MetricsService<S> {
+    inner: S,
+}
+
+impl<S, B, RB> Service<Request<B>> for MetricsService<S>
+where
+    S: Service<Request<B>, Response = Response<RB>> + Clone + Send + 'static,
+    S::Future: Send,
+    B: Send + 'static,
+{
+    type Response = S::Response;
+    type Error = S::Error;
+    type Future = Pin<Box<dyn Future<Output = <S::Future as Future>::Output> + Send>>;
+
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        self.inner.poll_ready(cx)
+    }
+
+    fn call(&mut self, req: Request<B>) -> Self::Future {
+        let host = req_host(&req);
+        let handler = format!(
+            "{}{}",
+            host.unwrap_or_default(),
+            req.uri()
+                .path_and_query()
+                .map(|p| p.as_str())
+                .unwrap_or("/")
+        );
+        let mut inner = self.inner.clone();
+
+        Box::pin(async move {
+            let res = inner.call(req).await;
+            if let Ok(response) = &res {
+                // Only collect metrics for requests we expected to handle.
+                let status = response.status();
+                if status.is_success() || status.is_redirection() {
+                    increment_counter!("http.requests.total", "handler" => handler);
+                }
+            }
+            res
+        })
     }
 }
