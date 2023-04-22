@@ -12,16 +12,45 @@
         }
 
         #content {
+            color: #fbfbfe;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: medium;
             margin: auto;
+            width: 50%;
+        }
+
+        #iconheader {
             text-align: center;
             font-size: 128pt;
-            width: 50%;
+        }
+
+        .post {
+            background-color: #43424f;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            padding: 20px;
+        }
+
+        .post .created {
+            font-size: small;
         }
     </style>
 </head>
 
 <body>
-    <div id="content">🖥️</div>
+    <div id="content">
+        <div id="iconheader">🖥️</div>
+        <div id="feed">
+            {% for post in feed %}
+            <div class="post">
+                <div class="created">{{ post.ago() }}</div>
+                <div class="text">
+                    <p>{{ post.text }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 </body>
 
 </html>
