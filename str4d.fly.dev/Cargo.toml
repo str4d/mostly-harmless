@@ -25,3 +25,6 @@ timeago = { version = "0.4", default-features = false, features = ["chrono"] }
 chrono = { version = "0.4", features = ["serde"] }
 reqwest = { version = "0.11", features = ["json"] }
 serde = { version = "1", features = ["derive"] }
+
+# Workaround for https://github.com/tokio-rs/tracing/issues/2565
+regex = { version = "1.0", features = ["unicode-case", "unicode-perl"] }
