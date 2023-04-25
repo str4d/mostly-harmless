@@ -11,7 +11,7 @@ pub(crate) fn build() -> Router {
 #[derive(Clone, Template)]
 #[template(path = "siso.dev/index.html")]
 struct Index {
-    feed: Vec<atproto::Post>,
+    feed: Vec<(String, atproto::Post)>,
 }
 
 #[cached(time = 60)]

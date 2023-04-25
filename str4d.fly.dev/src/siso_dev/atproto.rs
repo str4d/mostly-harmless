@@ -54,14 +54,14 @@ impl Client {
         }
     }
 
-    pub(super) async fn get_feed(&self) -> Result<Vec<Post>, Error> {
+    pub(super) async fn get_feed(&self) -> Result<Vec<(String, Post)>, Error> {
         let resp = self
             .query("com.atproto.repo.listRecords?repo=siso.dev&collection=app.bsky.feed.post")
             .await?
             .json::<Records>()
             .await?;
 
-        Ok(resp.records.into_iter().map(|r| r.value).collect())
+        Ok(resp.records.into_iter().map(|r| (r.cid, r.value)).collect())
     }
 }
 
@@ -72,6 +72,7 @@ struct Records {
 
 #[derive(Deserialize)]
 struct Record {
+    cid: String,
     value: Post,
 }
 

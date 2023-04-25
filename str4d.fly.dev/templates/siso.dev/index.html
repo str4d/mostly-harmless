@@ -130,9 +130,9 @@
         </div>
         <div id="feed">
             <div id="iconheader">🖥️</div>
-            {% for post in feed %}
-            <div class="post">
-                <div class="created">{{ post.ago() }}</div>
+            {% for (cid, post) in feed %}
+            <div class="post" id="{{ cid }}">
+                <div class="created"><a href="#{{ cid }}" title="{{ post.created_at }}">{{ post.ago() }}</a></div>
                 <div class="text">{{ post.formatted_text() | safe }}</div>
                 <div class="images">
                     {% for (src, alt) in post.images() %}
