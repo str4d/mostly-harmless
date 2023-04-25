@@ -133,9 +133,7 @@
             {% for post in feed %}
             <div class="post">
                 <div class="created">{{ post.ago() }}</div>
-                <div class="text">
-                    <p>{{ post.text }}</p>
-                </div>
+                <div class="text">{{ post.formatted_text() | safe }}</div>
                 <div class="images">
                     {% for (src, alt) in post.images() %}
                     <img src="{{ src }}" alt="{{ alt }}">

@@ -77,13 +77,20 @@ struct Record {
 
 #[derive(Clone, Deserialize)]
 pub(super) struct Post {
-    pub(super) text: String,
+    text: String,
     embed: Option<PostEmbed>,
     #[serde(rename = "createdAt")]
     pub(super) created_at: chrono::DateTime<chrono::Utc>,
 }
 
 impl Post {
+    pub(super) fn formatted_text(&self) -> String {
+        format!(
+            "<p>{}</p>",
+            self.text.replace("\n\n", "</p><p>").replace("\n", "<br>")
+        )
+    }
+
     pub(super) fn images(&self) -> impl Iterator<Item = (String, &String)> + '_ {
         self.embed.iter().flat_map(|embed| {
             embed.images.iter().map(|i| {
