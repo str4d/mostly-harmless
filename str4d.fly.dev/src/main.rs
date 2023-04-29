@@ -9,6 +9,7 @@ mod util;
 
 mod cryptography_design;
 mod siso_dev;
+mod sssh;
 mod str4d_xyz;
 
 #[tokio::main]
@@ -43,6 +44,8 @@ async fn main() {
         .handle("siso.dev", siso_dev::build())
         .redirect_temporary("www.cryptography.design", "https://cryptography.design")
         .handle("cryptography.design", cryptography_design::build())
+        .redirect_temporary("www.s-s.sh", "https://s-s.sh")
+        .handle("s-s.sh", sssh::build())
         .layer(util::MetricsLayer::new())
         .layer(TraceLayer::new_for_http());
 
