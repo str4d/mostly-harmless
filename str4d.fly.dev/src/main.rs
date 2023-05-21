@@ -8,6 +8,7 @@ use tracing_subscriber::fmt::format::FmtSpan;
 mod util;
 
 mod cryptography_design;
+mod jackgrigg_com;
 mod siso_dev;
 mod sssh;
 mod str4d_xyz;
@@ -38,6 +39,9 @@ async fn main() {
 
     tracing::info!("Starting server");
     let app = util::Multiplexer::new()
+        .redirect_temporary("jackgrigg.com", "https://www.jackgrigg.com")
+        .handle("www.jackgrigg.com", jackgrigg_com::www())
+        .handle("blog.jackgrigg.com", jackgrigg_com::blog())
         .redirect("www.str4d.xyz", "https://str4d.xyz")
         .handle("str4d.xyz", str4d_xyz::build())
         .redirect_temporary("www.siso.dev", "https://siso.dev")

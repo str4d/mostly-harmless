@@ -1,13 +1,9 @@
 use std::collections::HashMap;
 
 use askama::Template;
-use axum::{
-    body::HttpBody,
-    extract::Query,
-    response::Redirect,
-    routing::{get, MethodRouter},
-    Router,
-};
+use axum::{extract::Query, response::Redirect, routing::get, Router};
+
+use crate::util::get_temp_redir;
 
 pub(crate) fn build() -> Router {
     Router::new()
@@ -56,13 +52,4 @@ fn github_project_with_clone(project: &'static str) -> Router {
             },
         ),
     )
-}
-
-fn get_temp_redir<S, B>(uri: &str) -> MethodRouter<S, B>
-where
-    B: HttpBody + Send + 'static,
-    S: Clone + Send + Sync + 'static,
-{
-    let redir = Redirect::temporary(uri);
-    get(|| async { redir })
 }

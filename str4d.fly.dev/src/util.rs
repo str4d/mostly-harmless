@@ -9,7 +9,7 @@ use std::{
 use axum::{
     body::HttpBody,
     response::{IntoResponse, Redirect, Response},
-    routing::{future::RouteFuture, Route},
+    routing::{future::RouteFuture, get, MethodRouter, Route},
     Router,
 };
 use hyper::{header::HOST, Request, StatusCode};
@@ -221,4 +221,13 @@ where
             res
         })
     }
+}
+
+pub(crate) fn get_temp_redir<S, B>(uri: &str) -> MethodRouter<S, B>
+where
+    B: HttpBody + Send + 'static,
+    S: Clone + Send + Sync + 'static,
+{
+    let redir = Redirect::temporary(uri);
+    get(|| async { redir })
 }
