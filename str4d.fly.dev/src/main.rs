@@ -7,6 +7,7 @@ use tracing_subscriber::fmt::format::FmtSpan;
 
 mod util;
 
+mod atp_fyi;
 mod cryptography_design;
 mod jackgrigg_com;
 mod siso_dev;
@@ -48,6 +49,8 @@ async fn main() {
         .handle("siso.dev", siso_dev::build())
         .redirect_temporary("www.cryptography.design", "https://cryptography.design")
         .handle("cryptography.design", cryptography_design::build())
+        .redirect_temporary("www.atp.fyi", "https://atp.fyi")
+        .handle("atp.fyi", atp_fyi::build())
         .redirect_temporary("www.s-s.sh", "https://s-s.sh")
         .handle("s-s.sh", sssh::build())
         .layer(util::MetricsLayer::new())
