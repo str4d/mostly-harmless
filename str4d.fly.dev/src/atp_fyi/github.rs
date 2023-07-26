@@ -144,7 +144,7 @@ impl Issue {
 
     pub(super) fn uri(&self) -> String {
         format!(
-            "https://github.com/bluesky-social/social-app/issue/{}",
+            "https://github.com/bluesky-social/social-app/issues/{}",
             self.number
         )
     }

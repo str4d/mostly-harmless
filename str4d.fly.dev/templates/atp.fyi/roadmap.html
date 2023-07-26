@@ -5,7 +5,7 @@
 <h3>Opened by Bluesky developers</h3>
 <ul>
     {% for issue in issues.devs %}
-    <li><a href="{{ issue.uri() }}">{{ issue.title() }}</a></li>
+    <li><a href="{{ issue.uri() }}" target="_blank">{{ issue.title() }}</a></li>
     {% endfor %}
 </ul>
 {% endif %}
@@ -14,7 +14,7 @@
 <h3>Opened by community member</h3>
 <ul>
     {% for issue in issues.community %}
-    <li><a href="{{ issue.uri() }}">{{ issue.title() }}</a></li>
+    <li><a href="{{ issue.uri() }}" target="_blank">{{ issue.title() }}</a></li>
     {% endfor %}
 </ul>
 {% endif %}
