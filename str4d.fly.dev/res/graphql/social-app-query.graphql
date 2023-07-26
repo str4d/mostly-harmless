@@ -1,0 +1,31 @@
+query SocialAppQuery {
+  repository(owner: "bluesky-social", name: "social-app") {
+    issues(
+      first: 100
+      states: [OPEN]
+      labels: ["x:discussing", "x:on-the-roadmap", "x:planned", "x:putting-this-off"]
+    ) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        node {
+          number
+          title
+          author {
+            __typename
+            login
+          }
+          labels(first: 1, orderBy: {field: NAME, direction: DESC}) {
+            edges {
+              node {
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

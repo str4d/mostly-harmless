@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% macro roadmap_issues(issues) %}
+{% if !issues.devs.is_empty() %}
+<h3>Opened by Bluesky developers</h3>
+<ul>
+    {% for issue in issues.devs %}
+    <li><a href="{{ issue.uri() }}">{{ issue.title() }}</a></li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% if !issues.community.is_empty() %}
+<h3>Opened by community member</h3>
+<ul>
+    {% for issue in issues.community %}
+    <li><a href="{{ issue.uri() }}">{{ issue.title() }}</a></li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endmacro %}
+
+{% block title %}Unofficial Bluesky roadmap{% endblock %}
+
+{% block content %}
+<div id="nav"><a href="/">🏠 Home</a></div>
+
+<h1>Unofficial Bluesky roadmap</h1>
+
+<p>This is a list of all the issues open on the <a href="https://github.com/bluesky-social/social-app">Bluesky app's
+        GitHub repository</a> that have a roadmap-related label.</p>
+
+<p>If you have a bug or feature that you don't see below, check <a
+        href="https://github.com/bluesky-social/social-app/issues">the issue tracker</a> to see if there is already an
+    open issue. If you can't find one, <a href="https://github.com/bluesky-social/social-app/issues/new/choose">create a
+        new issue</a> if you have a GitHub account, or submit feedback through the Bluesky app.</p>
+
+{% match roadmap %}
+{% when Some with (roadmap) %}
+<h2>Discussing</h2>
+<p>They've seen the request and they're talking about it!</p>
+{% call roadmap_issues(roadmap.discussing) %}
+
+<h2>Planned</h2>
+<p>They're on it! These will likely happen in the near term.</p>
+{% call roadmap_issues(roadmap.planned) %}
+
+<h2>On the roadmap</h2>
+<p>They're planning to do these, but it may be a while.</p>
+{% call roadmap_issues(roadmap.on_roadmap) %}
+
+<h2>Putting off</h2>
+<p>Issues they can't deal with right now.</p>
+{% call roadmap_issues(roadmap.putting_off) %}
+
+{% when None %}
+<h2>Error: Failed to load issues from GitHub ☹️</h2>
+{% endmatch %}
+{% endblock %}
