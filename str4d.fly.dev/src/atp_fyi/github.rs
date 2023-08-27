@@ -98,7 +98,8 @@ enum Author {
 impl Author {
     fn parse(val: Option<social_app_query::SocialAppQueryRepositoryIssuesEdgesNodeAuthor>) -> Self {
         val.map_or(Author::Community, |author| match author.login.as_str() {
-            "pfrazee" | "ansh" | "renahlee" | "bnewbold" | "Jacob2161" => Author::Devs,
+            "ansh" | "bnewbold" | "devinivy" | "dholms" | "emilyliu7321" | "estrattonbailey"
+            | "Jacob2161" | "pfrazee" | "renahlee" => Author::Devs,
             _ => Author::Community,
         })
     }
