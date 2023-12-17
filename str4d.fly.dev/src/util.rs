@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     convert::Infallible,
+    env,
     future::Future,
     pin::Pin,
     task::{Context, Poll},
@@ -153,7 +154,12 @@ where
 
     #[inline]
     fn call(&mut self, req: Request<B>) -> Self::Future {
-        if let Some(router) = req_host(&req).and_then(|s| self.routers.get_mut(s)) {
+        if let Some(router) = env::var("TEST_HOST")
+            .ok()
+            .as_deref()
+            .or_else(|| req_host(&req))
+            .and_then(|s| self.routers.get_mut(s))
+        {
             router.call(req)
         } else {
             self.fallback.call(req)
