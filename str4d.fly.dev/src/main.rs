@@ -16,7 +16,7 @@ mod str4d_xyz;
 
 #[tokio::main]
 async fn main() {
-    println!("Starting str4d.fly.dev binary");
+    println!("Printing something as early as possible so fly.io sees it.");
 
     // Filter traces based on the RUST_LOG env var, or, if it's not set,
     // default to show info-level details.
