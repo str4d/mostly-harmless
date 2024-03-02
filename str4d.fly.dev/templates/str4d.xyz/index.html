@@ -2,16 +2,52 @@
 
 {% block title %}Jack Grigg / str4d{% endblock %}
 
+{% block head %}
+<style>
+    body {
+        background-image: url("https://cdn.bsky.app/img/banner/plain/did:plc:bvdrfwiamgi5leqs63q2duro/bafkreigu7l7ovjv6zo7fd3yvig6j7yzsrrzrcuw3gw2hp7lcdsjob5hfge@jpeg");
+        background-repeat: no-repeat;
+        background-size: 100%;
+    }
+
+    #content {
+        background-color: rgba(43, 42, 51, 0.85);
+        padding-top: 15px;
+    }
+
+    #banner {
+        width: 100%;
+    }
+
+    #header img {
+        width: 150px;
+        border-radius: 75px;
+        vertical-align: middle;
+    }
+
+    #header h1 {
+        display: inline-block;
+        margin-inline-start: 15px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1>Jack Grigg</h1>
+<div id="header">
+    <img
+        src="https://cdn.bsky.app/img/avatar/plain/did:plc:bvdrfwiamgi5leqs63q2duro/bafkreihxaol25ume765g7vdw4xdf433i6afdnw5mzhr7obs53hnahmifj4@jpeg">
+    <h1>Jack Grigg</h1>
+</div>
 <p>I'm a cryptographic engineer trying to improve people's privacy.</p>
-<p>You can find me online at these locations (activity not guaranteed):</p>
+<p>You can find me online at these locations:</p>
 <ul>
     <li><a rel="me" href="https://github.com/str4d">GitHub</a></li>
-    <li><a rel="me" href="https://staging.bsky.app/profile/did:plc:bvdrfwiamgi5leqs63q2duro">Bluesky</a></li>
-    <li><a rel="me" href="https://abyssdomain.expert/@str4d">Mastodon</a></li>
-    <li><a rel="me" href="https://cohost.org/str4d">cohost</a></li>
-    <li><a rel="me" href="https://twitter.com/str4d">The Bird Site</a></li>
+    <li><a rel="me" href="https://bsky.app/profile/did:plc:bvdrfwiamgi5leqs63q2duro">Bluesky</a></li>
+    <li>Not really used anymore:
+        <a rel="me" href="https://abyssdomain.expert/@str4d">Mastodon</a>,
+        <a rel="me" href="https://cohost.org/str4d">cohost</a>,
+        <a rel="me" href="https://twitter.com/str4d">The Bird Site</a>
+    </li>
 </ul>
 
 I occasionally write things and post them on <a href="https://words.str4d.xyz">words.str4d.xyz</a>.
@@ -21,10 +57,14 @@ I occasionally write things and post them on <a href="https://words.str4d.xyz">w
 <ul>
     <li><a href="https://zips.z.cash/protocol/protocol.pdf">The Zcash Protocol</a>, and <a
             href="https://zips.z.cash">various Zcash Improvement Proposals</a>.</li>
-    <li><a href="https://datatracker.ietf.org/doc/draft-irtf-cfrg-ristretto255-decaf448/">IRTF draft: The ristretto255
-            and decaf448 Groups</a></li>
-    <li><a href="https://c2sp.org/age-plugin">The age plugin specification</a></li>
-    <li><a href="https://c2sp.org/vrf-r255">ristretto255 VRF</a></li>
+    <li><a href="https://www.rfc-editor.org/rfc/rfc9496.html">RFC 9496: The ristretto255 and decaf448 Groups</a>.</li>
+    <li><a href="https://c2sp.org/age-plugin">The age plugin specification</a>.</li>
+    <li><a href="https://c2sp.org/vrf-r255"><code>ECVRF-RISTRETTO255-SHA512</code></a>: A ciphersuite of <a
+            href="https://www.rfc-editor.org/rfc/rfc9381.html">RFC 9381: Verifiable Random Functions</a>.</li>
+    <li><a href="https://geti2p.net/spec/red25519">Red25519</a>: An instantiation of the <a
+            href="https://zips.z.cash/protocol/protocol.pdf#concretereddsa">RedDSA</a> re-randomizable signature scheme
+        over Curve25519.</li>
+    <li><a href="https://geti2p.net/spec/ntcp2">I2P transport NTCP 2</a>.</li>
 </ul>
 
 <h2 id="software">Software</h2>
@@ -34,9 +74,13 @@ I occasionally write things and post them on <a href="https://words.str4d.xyz">w
             encryption</a>. Also available as <a href="https://crates.io/crates/age">a Rust crate</a>!</li>
     <li><a href="/age-plugin-yubikey"><code>age-plugin-yubikey</code></a>: A plugin for age clients which enables files
         to be encrypted to age identities stored on YubiKeys.</li>
+    <li><a href="https://github.com/flipperzero-rs/flipperzero"><code>flipperzero-rs</code></a>: Rust bindings for the
+        <a href="https://flipperzero.one/?ref=str4d.xyz">Flipper Zero</a>.
+    </li>
     <li><a href="https://z.cash">Zcash</a>: a digital currency using zero-knowledge proofs for privacy. I've been
-        one of the primary maintainers of the
-        <code>zcashd</code> full node implementation since 2016.
+        one of the primary maintainers of the <code>zcashd</code> full node implementation since 2016, and one of the
+        primary maintainers of the <a href="https://github.com/zcash/librustzcash">Zcash Rust libraries</a> since 2018.
     </li>
 </ul>
+</div>
 {% endblock %}
