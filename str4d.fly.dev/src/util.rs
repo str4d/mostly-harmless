@@ -69,6 +69,22 @@ where
     }
 
     /// Handles requests for the given host by directing them to the given router.
+    ///
+    /// The `aliases` are added as temporary (HTTP 307) redirects to the host.
+    pub(crate) fn add(
+        self,
+        host: &'static str,
+        aliases: impl IntoIterator<Item = &'static str>,
+        router: Router<S, B>,
+    ) -> Self {
+        aliases
+            .into_iter()
+            .fold(self.handle(host, router), |this, alias| {
+                this.redirect_temporary(alias, host)
+            })
+    }
+
+    /// Handles requests for the given host by directing them to the given router.
     pub(crate) fn handle(mut self, host: &'static str, router: Router<S, B>) -> Self {
         self.routers.insert(host, router);
         self
@@ -76,21 +92,21 @@ where
 
     /// Adds a permanent (HTTP 308) redirect between two hosts.
     ///
-    /// Requests with host `<from>` will be redirected to `<to><path_and_query>`.
+    /// Requests with host `<from>` will be redirected to `https://<to><path_and_query>`.
     pub(crate) fn redirect(self, from: &'static str, to: &'static str) -> Self {
         self.redirect_inner(from, to, Redirect::permanent)
     }
 
     /// Adds a temporary (HTTP 307) redirect between two hosts.
     ///
-    /// Requests with host `<from>` will be redirected to `<to><path_and_query>`.
+    /// Requests with host `<from>` will be redirected to `https://<to><path_and_query>`.
     pub(crate) fn redirect_temporary(self, from: &'static str, to: &'static str) -> Self {
         self.redirect_inner(from, to, Redirect::temporary)
     }
 
-    /// Adds a permanent (HTTP 308) redirect between two hosts.
+    /// Adds a redirect between two hosts.
     ///
-    /// Requests with host `<from>` will be redirected to `<to><path_and_query>`.
+    /// Requests with host `<from>` will be redirected to `https://<to><path_and_query>`.
     fn redirect_inner<F>(self, from: &'static str, to: &'static str, redirect: F) -> Self
     where
         F: FnOnce(&str) -> Redirect,
@@ -100,7 +116,7 @@ where
             from,
             Router::new().fallback(move |req: Request<B>| async move {
                 let to_uri = format!(
-                    "{}{}",
+                    "https://{}{}",
                     to,
                     req.uri().path_and_query().map(|p| p.as_str()).unwrap_or(""),
                 );

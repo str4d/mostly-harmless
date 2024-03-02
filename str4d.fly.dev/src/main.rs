@@ -40,19 +40,17 @@ async fn main() {
 
     tracing::info!("Starting server");
     let app = util::Multiplexer::new()
-        .redirect_temporary("jackgrigg.com", "https://www.jackgrigg.com")
-        .handle("www.jackgrigg.com", jackgrigg_com::www())
+        .add("www.jackgrigg.com", ["jackgrigg.com"], jackgrigg_com::www())
         .handle("blog.jackgrigg.com", jackgrigg_com::blog())
-        .redirect("www.str4d.xyz", "https://str4d.xyz")
-        .handle("str4d.xyz", str4d_xyz::build())
-        .redirect_temporary("www.siso.dev", "https://siso.dev")
-        .handle("siso.dev", siso_dev::build())
-        .redirect_temporary("www.cryptography.design", "https://cryptography.design")
-        .handle("cryptography.design", cryptography_design::build())
-        .redirect_temporary("www.atp.fyi", "https://atp.fyi")
-        .handle("atp.fyi", atp_fyi::build())
-        .redirect_temporary("www.s-s.sh", "https://s-s.sh")
-        .handle("s-s.sh", sssh::build())
+        .add("str4d.xyz", ["www.str4d.xyz"], str4d_xyz::build())
+        .add("siso.dev", ["www.siso.dev"], siso_dev::build())
+        .add(
+            "cryptography.design",
+            ["www.cryptography.design"],
+            cryptography_design::build(),
+        )
+        .add("atp.fyi", ["www.atp.fyi"], atp_fyi::build())
+        .add("s-s.sh", ["www.s-s.sh"], sssh::build())
         .layer(util::MetricsLayer::new())
         .layer(TraceLayer::new_for_http());
 
