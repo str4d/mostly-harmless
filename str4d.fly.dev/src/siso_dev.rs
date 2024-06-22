@@ -1,9 +1,9 @@
 use askama::Template;
 use atrium_api::{
-    app::{self, bsky::feed::post::RecordEmbedEnum::AppBskyEmbedImagesMain},
+    app::{self, bsky::feed::post::RecordEmbedRefs::AppBskyEmbedImagesMain},
     client::AtpServiceClient,
     com::atproto::repo::list_records,
-    types::{BlobRef, TypedBlobRef},
+    types::{BlobRef, TypedBlobRef, Union},
 };
 use atrium_xrpc_client::reqwest::ReqwestClientBuilder;
 use axum::{routing::get, Router};
@@ -43,24 +43,28 @@ async fn get_feed() -> anyhow::Result<Vec<(String, Post)>> {
         .com
         .atproto
         .repo
-        .list_records(list_records::Parameters {
-            collection: "app.bsky.feed.post".parse().expect("valid"),
-            cursor: None,
-            limit: Some(10.try_into().expect("valid")),
-            repo: "siso.dev".parse().expect("valid"),
-            reverse: None,
-            rkey_end: None,
-            rkey_start: None,
-        })
+        .list_records(
+            list_records::ParametersData {
+                collection: "app.bsky.feed.post".parse().expect("valid"),
+                cursor: None,
+                limit: Some(10.try_into().expect("valid")),
+                repo: "siso.dev".parse().expect("valid"),
+                reverse: None,
+                rkey_end: None,
+                rkey_start: None,
+            }
+            .into(),
+        )
         .await?;
 
     Ok(feed
+        .data
         .records
         .into_iter()
-        .filter_map(|r| match r.value {
-            atrium_api::records::Record::AppBskyFeedPost(post) => {
-                Some((r.cid.as_ref().to_string(), Post(*post)))
-            }
+        .filter_map(|r| match r.data.value {
+            atrium_api::records::Record::Known(
+                atrium_api::records::KnownRecord::AppBskyFeedPost(post),
+            ) => Some((r.data.cid.as_ref().to_string(), Post(*post))),
             _ => None,
         })
         .collect())
@@ -86,7 +90,7 @@ impl Post {
             .embed
             .iter()
             .filter_map(|embed| {
-                if let AppBskyEmbedImagesMain(embed) = embed {
+                if let Union::Refs(AppBskyEmbedImagesMain(embed)) = embed {
                     Some(embed.images.iter())
                 } else {
                     None
@@ -95,7 +99,7 @@ impl Post {
             .flatten()
             .map(|i| {
                 let link = match &i.image {
-                    BlobRef::Typed(TypedBlobRef::Blob(blob_ref)) => &blob_ref.r#ref.link,
+                    BlobRef::Typed(TypedBlobRef::Blob(blob_ref)) => &blob_ref.r#ref.0.to_string(),
                     BlobRef::Untyped(blob_ref) => &blob_ref.cid,
                 };
 

@@ -8,16 +8,15 @@ use std::{
 };
 
 use axum::{
-    body::HttpBody,
+    extract::Request,
     response::{IntoResponse, Redirect, Response},
     routing::{future::RouteFuture, get, MethodRouter, Route},
     Router,
 };
-use hyper::{header::HOST, Request, StatusCode};
-use metrics::increment_counter;
+use hyper::{header::HOST, StatusCode};
 use tower::{Layer, Service};
 
-fn req_host<B>(req: &Request<B>) -> Option<&str> {
+fn req_host(req: &Request) -> Option<&str> {
     // RFC 9112 Section 3.2.2:
     // > When an origin server receives a request with an absolute-form of
     // > request-target, the origin server MUST ignore the received Host header field
@@ -38,12 +37,12 @@ fn req_host<B>(req: &Request<B>) -> Option<&str> {
 
 /// A multiplexer that enables a single server to serve multiple hosts with independent
 /// [`Router`]s.
-pub(crate) struct Multiplexer<S, B> {
-    routers: HashMap<&'static str, Router<S, B>>,
-    fallback: Router<S, B>,
+pub(crate) struct Multiplexer<S> {
+    routers: HashMap<&'static str, Router<S>>,
+    fallback: Router<S>,
 }
 
-impl<S, B> Clone for Multiplexer<S, B> {
+impl<S> Clone for Multiplexer<S> {
     fn clone(&self) -> Self {
         Self {
             routers: self.routers.clone(),
@@ -52,10 +51,9 @@ impl<S, B> Clone for Multiplexer<S, B> {
     }
 }
 
-impl<S, B> Multiplexer<S, B>
+impl<S> Multiplexer<S>
 where
     S: Clone + Send + Sync + 'static,
-    B: HttpBody + Send + 'static,
 {
     /// Creates a new `Multiplexer`.
     ///
@@ -75,7 +73,7 @@ where
         self,
         host: &'static str,
         aliases: impl IntoIterator<Item = &'static str>,
-        router: Router<S, B>,
+        router: Router<S>,
     ) -> Self {
         aliases
             .into_iter()
@@ -85,7 +83,7 @@ where
     }
 
     /// Handles requests for the given host by directing them to the given router.
-    pub(crate) fn handle(mut self, host: &'static str, router: Router<S, B>) -> Self {
+    pub(crate) fn handle(mut self, host: &'static str, router: Router<S>) -> Self {
         self.routers.insert(host, router);
         self
     }
@@ -114,7 +112,7 @@ where
     {
         self.handle(
             from,
-            Router::new().fallback(move |req: Request<B>| async move {
+            Router::new().fallback(move |req: Request| async move {
                 let to_uri = format!(
                     "https://{}{}",
                     to,
@@ -132,14 +130,13 @@ where
     /// Note that the middleware is only applied to existing routers. So you have to first
     /// add your routers and then call `layer` afterwards. Additional routers added after
     /// `layer` is called will not have the middleware added.
-    pub(crate) fn layer<L, NewReqBody>(self, layer: L) -> Multiplexer<S, NewReqBody>
+    pub(crate) fn layer<L>(self, layer: L) -> Multiplexer<S>
     where
-        L: Layer<Route<B>> + Clone + Send + 'static,
-        L::Service: Service<Request<NewReqBody>> + Clone + Send + 'static,
-        <L::Service as Service<Request<NewReqBody>>>::Response: IntoResponse + 'static,
-        <L::Service as Service<Request<NewReqBody>>>::Error: Into<Infallible> + 'static,
-        <L::Service as Service<Request<NewReqBody>>>::Future: Send + 'static,
-        NewReqBody: HttpBody + 'static,
+        L: Layer<Route> + Clone + Send + 'static,
+        L::Service: Service<Request> + Clone + Send + 'static,
+        <L::Service as Service<Request>>::Response: IntoResponse + 'static,
+        <L::Service as Service<Request>>::Error: Into<Infallible> + 'static,
+        <L::Service as Service<Request>>::Future: Send + 'static,
     {
         let routers = self
             .routers
@@ -154,13 +151,10 @@ where
     }
 }
 
-impl<B> Service<Request<B>> for Multiplexer<(), B>
-where
-    B: HttpBody + Send + 'static,
-{
+impl Service<Request> for Multiplexer<()> {
     type Response = Response;
     type Error = Infallible;
-    type Future = RouteFuture<B, Infallible>;
+    type Future = RouteFuture<Infallible>;
 
     #[inline]
     fn poll_ready(&mut self, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
@@ -169,7 +163,7 @@ where
     }
 
     #[inline]
-    fn call(&mut self, req: Request<B>) -> Self::Future {
+    fn call(&mut self, req: Request) -> Self::Future {
         if let Some(router) = env::var("TEST_HOST")
             .ok()
             .as_deref()
@@ -205,11 +199,10 @@ pub(crate) struct MetricsService<S> {
     inner: S,
 }
 
-impl<S, B, RB> Service<Request<B>> for MetricsService<S>
+impl<S, RB> Service<Request> for MetricsService<S>
 where
-    S: Service<Request<B>, Response = Response<RB>> + Clone + Send + 'static,
+    S: Service<Request, Response = Response<RB>> + Clone + Send + 'static,
     S::Future: Send,
-    B: Send + 'static,
 {
     type Response = S::Response;
     type Error = S::Error;
@@ -219,7 +212,7 @@ where
         self.inner.poll_ready(cx)
     }
 
-    fn call(&mut self, req: Request<B>) -> Self::Future {
+    fn call(&mut self, req: Request) -> Self::Future {
         let host = req_host(&req);
         let handler = format!(
             "{}{}",
@@ -237,7 +230,7 @@ where
                 // Only collect metrics for requests we expected to handle.
                 let status = response.status();
                 if status.is_success() || status.is_redirection() {
-                    increment_counter!("http.requests.total", "handler" => handler);
+                    metrics::counter!("http.requests.total", "handler" => handler).increment(1);
                 }
             }
             res
@@ -245,9 +238,8 @@ where
     }
 }
 
-pub(crate) fn get_temp_redir<S, B>(uri: &str) -> MethodRouter<S, B>
+pub(crate) fn get_temp_redir<S>(uri: &str) -> MethodRouter<S>
 where
-    B: HttpBody + Send + 'static,
     S: Clone + Send + Sync + 'static,
 {
     let redir = Redirect::temporary(uri);

@@ -8,31 +8,36 @@ publish = false
 [dependencies]
 # Webserver
 anyhow = "1"
-axum = "0.6"
+axum = "0.7"
 cached = "0.43"
-hyper = "0.14"
+hyper = "1"
 tokio = { version = "1", features = ["full"] }
 tower = "0.4"
-tower-http = { version = "0.4", features = ["trace"] }
+tower-http = { version = "0.5", features = ["trace"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter", "fmt"] }
 
 # Templates
 askama = { version = "0.12", features = ["with-axum"] }
-askama_axum = "0.3"
+askama_axum = "0.4"
 timeago = { version = "0.4", default-features = false, features = ["chrono"] }
 
 # Datafeeds
-atrium-api = "0.18"
-atrium-xrpc-client = { version = "0.4", default-features = false, features = ["reqwest"] }
+atrium-api = "0.23"
+atrium-xrpc-client = { version = "0.5", default-features = false, features = [
+    "reqwest",
+] }
 chrono = { version = "0.4", features = ["serde"] }
 graphql_client = "0.13"
-reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"] }
+reqwest = { version = "0.12", default-features = false, features = [
+    "json",
+    "rustls-tls",
+] }
 serde = { version = "1", features = ["derive"] }
 
 # Metrics
-metrics = "0.21"
-metrics-exporter-prometheus = "0.12"
+metrics = "0.23"
+metrics-exporter-prometheus = "0.15"
 
 # Workaround for https://github.com/tokio-rs/tracing/issues/2565
 regex = { version = "1.0", features = ["unicode-case", "unicode-perl"] }

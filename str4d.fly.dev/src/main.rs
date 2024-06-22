@@ -1,7 +1,8 @@
-use std::convert::Infallible;
+use std::net::{IpAddr, Ipv6Addr};
 
-use hyper::service::make_service_fn;
+use axum::ServiceExt;
 use metrics_exporter_prometheus::PrometheusBuilder;
+use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::fmt::format::FmtSpan;
 
@@ -54,14 +55,16 @@ async fn main() {
         .layer(util::MetricsLayer::new())
         .layer(TraceLayer::new_for_http());
 
-    // IPv6 + IPv6 any addr
-    let addr = ([0, 0, 0, 0, 0, 0, 0, 0], 8080).into();
-    tracing::debug!("Listening on {}", addr);
-    let server = axum::Server::bind(&addr).serve(make_service_fn(move |_| {
-        let app = app.clone();
-        async move { Ok::<_, Infallible>(app) }
-    }));
-    if let Err(e) = server.await {
-        tracing::error!("Server error: {}", e);
+    let addr: (IpAddr, _) = (Ipv6Addr::UNSPECIFIED.into(), 8080);
+    tracing::debug!("Listening on {:?}", addr);
+
+    match TcpListener::bind(addr).await {
+        Err(e) => tracing::error!("Failed to bind to listening address: {}", e),
+        Ok(listener) => {
+            let server = axum::serve(listener, app.into_make_service());
+            if let Err(e) = server.await {
+                tracing::error!("Server error: {}", e);
+            }
+        }
     }
 }
