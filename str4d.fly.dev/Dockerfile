@@ -13,6 +13,9 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 
 # Copy the rest
 COPY . .
+# Fetch the latest GitHub GraphQL schema
+RUN wget -O ./res/graphql/github-schema.graphql \
+    https://raw.githubusercontent.com/octokit/graphql-schema/master/schema.graphql
 # Build (install) the actual binaries
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/usr/src/app/target \

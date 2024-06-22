@@ -6,7 +6,7 @@ use self::social_app_query::SocialAppQueryRepositoryIssuesEdgesNodeLabelsEdges;
 
 #[derive(GraphQLQuery)]
 #[graphql(
-    schema_path = "res/graphql/github-schema.json",
+    schema_path = "res/graphql/github-schema.graphql",
     query_path = "res/graphql/social-app-query.graphql"
 )]
 pub struct SocialAppQuery;
