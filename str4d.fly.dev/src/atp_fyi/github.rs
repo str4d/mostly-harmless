@@ -1,6 +1,8 @@
 use std::env;
 
-use graphql_client::{GraphQLQuery, Response};
+use graphql_client::GraphQLQuery;
+
+use crate::util::github;
 
 use self::social_app_query::SocialAppQueryRepositoryIssuesEdgesNodeLabelsEdges;
 
@@ -12,28 +14,14 @@ use self::social_app_query::SocialAppQueryRepositoryIssuesEdgesNodeLabelsEdges;
 pub struct SocialAppQuery;
 
 pub(super) async fn get_roadmap() -> Result<Roadmap, Error> {
-    let variables = social_app_query::Variables;
-    let request_body = SocialAppQuery::build_query(variables);
+    let client = github::Client::new("atp.fyi")?;
 
-    let client = reqwest::ClientBuilder::new()
-        .user_agent("atp.fyi")
-        .build()?;
-    let res = client
-        .post("https://api.github.com/graphql")
-        .bearer_auth(env::var("GITHUB_API_KEY")?)
-        .json(&request_body)
-        .send()
+    let data = client
+        .post_graphql::<SocialAppQuery>(social_app_query::Variables)
         .await?
-        .error_for_status()?;
-    let response_body: Response<social_app_query::ResponseData> = res.json().await?;
+        .into_data()
+        .map_err(Error::GraphQL)?;
 
-    let data = response_body.data.ok_or_else(|| {
-        if let Some(errors) = response_body.errors {
-            Error::GraphQL(errors)
-        } else {
-            Error::UnknownGraphQLError
-        }
-    })?;
     let repo = data.repository.expect("repo exists");
 
     let mut roadmap = Roadmap::default();
@@ -154,15 +142,15 @@ impl Issue {
 
 #[derive(Debug)]
 pub(super) enum Error {
-    Reqwest(reqwest::Error),
+    GitHub(github::Error),
     GraphQL(Vec<graphql_client::Error>),
     UnknownGraphQLError,
     Var(env::VarError),
 }
 
-impl From<reqwest::Error> for Error {
-    fn from(err: reqwest::Error) -> Self {
-        Error::Reqwest(err)
+impl From<github::Error> for Error {
+    fn from(err: github::Error) -> Self {
+        Error::GitHub(err)
     }
 }
 

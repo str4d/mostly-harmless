@@ -16,6 +16,8 @@ use axum::{
 use hyper::{header::HOST, StatusCode};
 use tower::{Layer, Service};
 
+pub(crate) mod github;
+
 fn req_host(req: &Request) -> Option<&str> {
     // RFC 9112 Section 3.2.2:
     // > When an origin server receives a request with an absolute-form of
