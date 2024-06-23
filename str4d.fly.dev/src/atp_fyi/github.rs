@@ -13,11 +13,44 @@ use self::social_app_query::SocialAppQueryRepositoryIssuesEdgesNodeLabelsEdges;
 )]
 pub struct SocialAppQuery;
 
+impl github::PaginatedQuery for SocialAppQuery {
+    fn page_info(data: &Self::ResponseData) -> github::PageInfo {
+        let page_info = &data
+            .repository
+            .as_ref()
+            .expect("repo exists")
+            .issues
+            .page_info;
+
+        github::PageInfo {
+            end_cursor: page_info.end_cursor.clone(),
+            has_next_page: page_info.has_next_page,
+        }
+    }
+
+    fn with_after(_: &Self::Variables, after: Option<String>) -> Self::Variables {
+        social_app_query::Variables { after }
+    }
+
+    fn merge_page(acc: &mut Self::ResponseData, page: Self::ResponseData) {
+        let issues = &mut acc.repository.as_mut().expect("repo exists").issues;
+
+        match (
+            issues.edges.as_mut(),
+            page.repository.expect("repo exists").issues.edges,
+        ) {
+            (_, None) => (),
+            (None, Some(edges)) => issues.edges = Some(edges),
+            (Some(acc), Some(mut page)) => acc.append(&mut page),
+        }
+    }
+}
+
 pub(super) async fn get_roadmap() -> Result<Roadmap, Error> {
     let client = github::Client::new("atp.fyi")?;
 
     let data = client
-        .post_graphql::<SocialAppQuery>(social_app_query::Variables)
+        .post_paginated_graphql::<SocialAppQuery>(social_app_query::Variables { after: None })
         .await?
         .into_data()
         .map_err(Error::GraphQL)?;

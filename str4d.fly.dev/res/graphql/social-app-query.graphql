@@ -1,7 +1,8 @@
-query SocialAppQuery {
+query SocialAppQuery($after: String) {
   repository(owner: "bluesky-social", name: "social-app") {
     issues(
       first: 100
+      after: $after
       states: [OPEN]
       labels: ["x:discussing", "x:on-the-roadmap", "x:planned", "x:putting-this-off"]
     ) {
