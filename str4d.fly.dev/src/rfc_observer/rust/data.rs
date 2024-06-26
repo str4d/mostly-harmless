@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use phf::phf_map;
 use regex::Regex;
 use serde::Serialize;
-use tracing::info;
+use tracing::debug;
 
 use super::github::rust_rfc_query::{
     RustRfcQueryRepositoryIssuesEdgesNode,
@@ -36,7 +36,7 @@ const RE_RFC_TEXT: OnceCell<Regex> = OnceCell::new();
 const RE_RFC_RENDERED: OnceCell<Regex> = OnceCell::new();
 const RE_RFC_TITLE: OnceCell<Regex> = OnceCell::new();
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub(super) struct TrackingIssue {
     number: i64,
     title: String,
@@ -84,7 +84,7 @@ impl TrackingIssue {
                 }) {
                 Some(rfc) => rfc.as_str().parse().expect("checked"),
                 None => {
-                    info!(number = issue.number, "No RFC number found");
+                    debug!(number = issue.number, "No RFC number found");
                     return None;
                 }
             },
@@ -122,18 +122,6 @@ impl TrackingIssue {
             closed_at: issue.closed_at,
         })
     }
-
-    pub(super) fn title(&self) -> &str {
-        &self.title
-    }
-
-    pub(super) fn uri(&self) -> String {
-        format!("https://github.com/rust-lang/rust/issues/{}", self.number)
-    }
-
-    pub(super) fn age_in_days(&self) -> i64 {
-        (Utc::now() - self.created_at).num_days()
-    }
 }
 
 enum Label {
@@ -162,7 +150,7 @@ pub(super) struct Aggregate {
     closed: usize,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub(super) struct Data {
     pub(super) agg: Vec<Aggregate>,
     pub(super) open: Vec<TrackingIssue>,

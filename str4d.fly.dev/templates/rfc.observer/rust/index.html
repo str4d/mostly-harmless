@@ -31,38 +31,29 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@^4"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@^2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@^1"></script>    
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@^1"></script>
 </head>
 
 <body>
     <div id="iconheader">🦀🔍</div>
 
-    {% match data %}
-    {% when None %}
-    <h2>Error: Failed to load RFC tracking issues from GitHub ☹️</h2>
-    {% when Some with (data) %}
-    <h2>Rust RFCs</h2>
-    <p>There are {{ data.open.len() + data.closed.len() }} RFC tracking issues, of which {{ data.open.len() }} are still open.</p>
+    <div id="status-box">
+        <h2 id="status">Fetching RFCs...</h2>
+        <p id="status-text"></p>
+    </div>
+
     <div>
         <canvas id="aggregate"></canvas>
     </div>
+
     <h2>Open issues</h2>
-    <ul>
-        {% for issue in data.open %}
-        <li><a href="{{ issue.uri() }}" target="_blank">{{ issue.age_in_days() }} days old: (RFC {{ issue.rfc }}) {{ issue.title() }}</a></li>
-        {% endfor %}
-    </ul>
+    <ul id="open-issues"></ul>
+
     <h2>Closed issues</h2>
-    <ul>
-        {% for issue in data.closed %}
-        <li><a href="{{ issue.uri() }}" target="_blank">(RFC {{ issue.rfc }}) {{ issue.title() }}</a></li>
-        {% endfor %}
-    </ul>
+    <ul id="closed-issues"></ul>
 
     <script>
-        const aggregate = {{data.agg|json|safe}};
-
-        new Chart(document.getElementById('aggregate'), {
+        const graphAgg = (aggregate) => new Chart(document.getElementById('aggregate'), {
             type: 'line',
             data: {
                 labels: aggregate.map(row => row.date),
@@ -103,9 +94,48 @@
                     }
                 }
             }
-        })
+        });
+
+        function buildList(list, issues) {
+            list.replaceChildren();
+            issues.forEach(issue => {
+                let li = document.createElement('li');
+                list.appendChild(li);
+                let a = document.createElement('a');
+                li.appendChild(a);
+                a.href = `https://github.com/rust-lang/rust/issues/${issue.number}`;
+                a.target = "_blank";
+                if (!issue.closed_at) {
+                    let created = Date.parse(issue.created_at);
+                    let age = Date.now() - created;
+                    let age_in_days = Math.round(age / (1000 * 3600 * 24));
+                    a.innerHTML += `${age_in_days} days old: `;
+                }
+                a.innerHTML += `(RFC ${issue.rfc}) ${issue.title}`;
+            });
+        }
+
+        fetch("/api/data")
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error: ${response.status}`);
+                }
+
+                return response.json();
+            })
+            .then((data) => {
+                document.getElementById('status').textContent = "Rust RFCs";
+                document.getElementById('status-text').textContent = `There are ${data.open.length + data.closed.length} RFC tracking issues, of which ${data.open.length} are still open.`;
+                graphAgg(data.agg);
+                buildList(document.getElementById('open-issues'), data.open);
+                buildList(document.getElementById('closed-issues'), data.closed);
+            })
+            .catch((error) => {
+                console.error(error);
+                document.getElementById('status').textContent = "Error";
+                document.getElementById('status-text').textContent = `Failed to load RFC tracking issues: ${error}`;
+            });
     </script>
-    {% endmatch %}
 </body>
 
 </html>
