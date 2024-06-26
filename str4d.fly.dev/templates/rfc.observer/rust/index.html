@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Rust RFC Observer</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            background-color: #2b2a33;
+            color: white;
+            font: 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 10px;
+        }
+
+        a {
+            color: rgb(16, 131, 254);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        #iconheader {
+            text-align: center;
+            font-size: 128pt;
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@^4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@^2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@^1"></script>    
+</head>
+
+<body>
+    <div id="iconheader">🦀🔍</div>
+
+    {% match data %}
+    {% when None %}
+    <h2>Error: Failed to load RFC tracking issues from GitHub ☹️</h2>
+    {% when Some with (data) %}
+    <h2>Rust RFCs</h2>
+    <p>There are {{ data.open.len() + data.closed.len() }} RFC tracking issues, of which {{ data.open.len() }} are still open.</p>
+    <div>
+        <canvas id="aggregate"></canvas>
+    </div>
+    <h2>Open issues</h2>
+    <ul>
+        {% for issue in data.open %}
+        <li><a href="{{ issue.uri() }}" target="_blank">{{ issue.age_in_days() }} days old: (RFC {{ issue.rfc }}) {{ issue.title() }}</a></li>
+        {% endfor %}
+    </ul>
+    <h2>Closed issues</h2>
+    <ul>
+        {% for issue in data.closed %}
+        <li><a href="{{ issue.uri() }}" target="_blank">(RFC {{ issue.rfc }}) {{ issue.title() }}</a></li>
+        {% endfor %}
+    </ul>
+
+    <script>
+        const aggregate = {{data.agg|json|safe}};
+
+        new Chart(document.getElementById('aggregate'), {
+            type: 'line',
+            data: {
+                labels: aggregate.map(row => row.date),
+                datasets: [
+                    {
+                        label: 'Created',
+                        data: aggregate.map(row => row.created),
+                        fill: true,
+                        pointStyle: false
+                    },
+                    {
+                        label: 'Approved',
+                        data: aggregate.map(row => row.approved),
+                        fill: true,
+                        pointStyle: false
+                    },
+                    {
+                        label: 'Implemented',
+                        data: aggregate.map(row => row.implemented),
+                        fill: true,
+                        pointStyle: false
+                    },
+                    {
+                        label: 'Closed',
+                        data: aggregate.map(row => row.closed),
+                        fill: true,
+                        pointStyle: false
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'time'
+                    },
+                    y: {
+                        stacked: true
+                    }
+                }
+            }
+        })
+    </script>
+    {% endmatch %}
+</body>
+
+</html>

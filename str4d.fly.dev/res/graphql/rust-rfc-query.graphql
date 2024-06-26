@@ -1,0 +1,56 @@
+query RustRfcQuery($after: String) {
+  repository(owner: "rust-lang", name: "rust") {
+    issues(
+      first: 100
+      after: $after
+      labels: ["B-RFC-approved", "B-RFC-implemented"]
+    ) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        node {
+          number
+          title
+          body
+          createdAt
+          closedAt
+          labels(
+            first: 100,
+            orderBy: {field: NAME, direction: ASC}
+          ) {
+            edges {
+              node {
+                name
+              }
+            }
+          }
+          timelineItems(
+            last: 100,
+            itemTypes: [LABELED_EVENT, UNLABELED_EVENT]
+          ) {
+            totalCount
+            edges {
+              node {
+                __typename
+                ... on LabeledEvent {
+                  createdAt
+                  label {
+                    name
+                  }
+                }
+                ... on UnlabeledEvent {
+                  createdAt
+                  label {
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

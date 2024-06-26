@@ -18,7 +18,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter", "fmt"] }
 
 # Templates
-askama = { version = "0.12", features = ["with-axum"] }
+askama = { version = "0.12", features = ["serde-json", "with-axum"] }
 askama_axum = "0.4"
 timeago = { version = "0.4", default-features = false, features = ["chrono"] }
 
@@ -38,6 +38,9 @@ serde = { version = "1", features = ["derive"] }
 # Metrics
 metrics = "0.23"
 metrics-exporter-prometheus = "0.15"
+
+# Data
+phf = { version = "0.11", features = ["macros"] }
 
 # Workaround for https://github.com/tokio-rs/tracing/issues/2565
 regex = { version = "1.0", features = ["unicode-case", "unicode-perl"] }

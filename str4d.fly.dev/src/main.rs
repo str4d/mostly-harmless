@@ -11,6 +11,7 @@ mod util;
 mod atp_fyi;
 mod cryptography_design;
 mod jackgrigg_com;
+mod rfc_observer;
 mod siso_dev;
 mod sssh;
 mod str4d_xyz;
@@ -52,6 +53,8 @@ async fn main() {
         )
         .add("atp.fyi", ["www.atp.fyi"], atp_fyi::build())
         .add("s-s.sh", ["www.s-s.sh"], sssh::build())
+        .add("rfc.observer", ["www.rfc.observer"], rfc_observer::build())
+        .handle("rust.rfc.observer", rfc_observer::rust::build())
         .layer(util::MetricsLayer::new())
         .layer(TraceLayer::new_for_http());
 
