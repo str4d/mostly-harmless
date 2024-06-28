@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>Rust RFC Observer</title>
+    <title>{% block title %}{% endblock %}</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -27,6 +27,10 @@
             text-align: center;
             font-size: 128pt;
         }
+
+        #issue-lists {
+            display: none;
+        }
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@^4"></script>
@@ -35,10 +39,10 @@
 </head>
 
 <body>
-    <div id="iconheader">🦀🔍</div>
+    <div id="iconheader">{% block iconheader %}{% endblock %}</div>
+    <h2>{% block textheader %}{% endblock %}</h2>
 
     <div id="status-box">
-        <h2 id="status">Fetching RFCs...</h2>
         <p id="status-text"></p>
     </div>
 
@@ -46,43 +50,28 @@
         <canvas id="aggregate"></canvas>
     </div>
 
-    <h2>Open issues</h2>
-    <ul id="open-issues"></ul>
+    <div id="issue-lists">
+        <h2>Open issues</h2>
+        <ul id="open-issues"></ul>
 
-    <h2>Closed issues</h2>
-    <ul id="closed-issues"></ul>
+        <h2>Closed issues</h2>
+        <ul id="closed-issues"></ul>
+    </div>
 
+    <script>
+        var vars = {};
+    </script>
+    {% block scriptvars %}{% endblock %}
     <script>
         const graphAgg = (aggregate) => new Chart(document.getElementById('aggregate'), {
             type: 'line',
             data: {
                 labels: aggregate.map(row => row.date),
-                datasets: [
-                    {
-                        label: 'Created',
-                        data: aggregate.map(row => row.created),
-                        fill: true,
-                        pointStyle: false
-                    },
-                    {
-                        label: 'Approved',
-                        data: aggregate.map(row => row.approved),
-                        fill: true,
-                        pointStyle: false
-                    },
-                    {
-                        label: 'Implemented',
-                        data: aggregate.map(row => row.implemented),
-                        fill: true,
-                        pointStyle: false
-                    },
-                    {
-                        label: 'Closed',
-                        data: aggregate.map(row => row.closed),
-                        fill: true,
-                        pointStyle: false
-                    }
-                ]
+                datasets: vars.datasets(aggregate).map(dataset => {
+                    dataset.fill = true;
+                    dataset.pointStyle = false;
+                    return dataset;
+                })
             },
             options: {
                 scales: {
@@ -103,17 +92,14 @@
                 list.appendChild(li);
                 let a = document.createElement('a');
                 li.appendChild(a);
-                a.href = `https://github.com/rust-lang/rust/issues/${issue.number}`;
                 a.target = "_blank";
-                if (!issue.closed_at) {
-                    let created = Date.parse(issue.created_at);
-                    let age = Date.now() - created;
-                    let age_in_days = Math.round(age / (1000 * 3600 * 24));
-                    a.innerHTML += `${age_in_days} days old: `;
-                }
-                a.innerHTML += `(RFC ${issue.rfc}) ${issue.title}`;
+                vars.renderIssue(issue, a);
             });
         }
+
+        const statusText = document.getElementById('status-text');
+
+        statusText.textContent = vars.fetchingStatus;
 
         fetch("/api/data")
             .then((response) => {
@@ -124,16 +110,15 @@
                 return response.json();
             })
             .then((data) => {
-                document.getElementById('status').textContent = "Rust RFCs";
-                document.getElementById('status-text').textContent = `There are ${data.open.length + data.closed.length} RFC tracking issues, of which ${data.open.length} are still open.`;
+                statusText.textContent = vars.loadedStatus(data);
                 graphAgg(data.agg);
                 buildList(document.getElementById('open-issues'), data.open);
                 buildList(document.getElementById('closed-issues'), data.closed);
+                document.getElementById('issue-lists').style.display = 'unset';
             })
             .catch((error) => {
                 console.error(error);
-                document.getElementById('status').textContent = "Error";
-                document.getElementById('status-text').textContent = `Failed to load RFC tracking issues: ${error}`;
+                statusText.textContent = `Failed to load data: ${error}`;
             });
     </script>
 </body>

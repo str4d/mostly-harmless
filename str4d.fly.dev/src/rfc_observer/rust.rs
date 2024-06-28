@@ -12,7 +12,7 @@ pub(crate) fn build() -> Router {
 }
 
 #[derive(Clone, Template)]
-#[template(path = "rfc.observer/rust/index.html")]
+#[template(path = "rfc.observer/rust.html")]
 struct Index {}
 
 async fn index() -> Index {
