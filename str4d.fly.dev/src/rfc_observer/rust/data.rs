@@ -1,4 +1,4 @@
-use std::{cell::OnceCell, collections::BTreeMap};
+use std::{cell::OnceCell, collections::BTreeMap, str::FromStr};
 
 use chrono::{DateTime, Utc};
 use phf::phf_map;
@@ -6,10 +6,9 @@ use regex::Regex;
 use serde::Serialize;
 use tracing::debug;
 
-use super::github::rust_rfc_query::{
-    RustRfcQueryRepositoryIssuesEdgesNode,
-    RustRfcQueryRepositoryIssuesEdgesNodeTimelineItemsEdgesNode::LabeledEvent,
-    RustRfcQueryRepositoryIssuesEdgesNodeTimelineItemsEdgesNodeOnLabeledEventLabel,
+use crate::rfc_observer::common::{
+    issues_with_labels_query::IssuesWithLabelsQueryRepositoryIssuesEdgesNode, label_events_for,
+    LabelEvent,
 };
 
 /// Issues that get detected as RFC tracking issues, but that should be ignored (because
@@ -48,7 +47,7 @@ pub(super) struct TrackingIssue {
 }
 
 impl TrackingIssue {
-    pub(super) fn new(issue: RustRfcQueryRepositoryIssuesEdgesNode) -> Option<Self> {
+    pub(super) fn new(issue: IssuesWithLabelsQueryRepositoryIssuesEdgesNode) -> Option<Self> {
         if ISSUES_TO_IGNORE.contains(&issue.number) {
             return None;
         }
@@ -90,27 +89,26 @@ impl TrackingIssue {
             },
         };
 
-        let label_events = issue
-            .timeline_items
-            .edges
-            .into_iter()
-            .flat_map(|events| events.into_iter().flatten().filter_map(|event| event.node))
-            .filter_map(|event| match event {
-                LabeledEvent(e) => Label::parse(e.label).map(|label| (label, e.created_at)),
-                _ => None,
-            })
-            .collect::<Vec<_>>();
+        let label_events = label_events_for::<Label>(issue.timeline_items);
 
         let approved_at = label_events
             .iter()
-            .find_map(|(label, at)| matches!(label, Label::RfcApproved).then_some(at))
-            .copied()
+            .find_map(|evt| match evt {
+                LabelEvent::Applied {
+                    label: Label::RfcApproved,
+                    at,
+                } => Some(*at),
+                _ => None,
+            })
             .unwrap_or(issue.created_at);
 
-        let implemented_at = label_events
-            .iter()
-            .find_map(|(label, at)| matches!(label, Label::RfcImplemented).then_some(at))
-            .copied();
+        let implemented_at = label_events.iter().find_map(|evt| match evt {
+            LabelEvent::Applied {
+                label: Label::RfcImplemented,
+                at,
+            } => Some(*at),
+            _ => None,
+        });
 
         Some(TrackingIssue {
             number: issue.number,
@@ -129,14 +127,14 @@ enum Label {
     RfcImplemented,
 }
 
-impl Label {
-    fn parse(
-        label: RustRfcQueryRepositoryIssuesEdgesNodeTimelineItemsEdgesNodeOnLabeledEventLabel,
-    ) -> Option<Self> {
-        match label.name.as_str() {
-            "B-RFC-approved" => Some(Label::RfcApproved),
-            "B-RFC-implemented" => Some(Label::RfcImplemented),
-            _ => None,
+impl FromStr for Label {
+    type Err = ();
+
+    fn from_str(label: &str) -> Result<Self, Self::Err> {
+        match label {
+            "B-RFC-approved" => Ok(Label::RfcApproved),
+            "B-RFC-implemented" => Ok(Label::RfcImplemented),
+            _ => Err(()),
         }
     }
 }

@@ -1,16 +1,20 @@
-use graphql_client::GraphQLQuery;
-
-use crate::util::github;
+use crate::{
+    rfc_observer::common::{issues_with_labels_query, IssuesWithLabelsQuery},
+    util::github,
+};
 
 use super::data::TrackingIssue;
-
-type DateTime = chrono::DateTime<chrono::Utc>;
 
 pub(super) async fn get_tracking_issues() -> Result<Vec<TrackingIssue>, Error> {
     let client = github::Client::new("rust.rfc.observer")?;
 
     let data = client
-        .post_paginated_graphql::<RustRfcQuery>(rust_rfc_query::Variables { after: None })
+        .post_paginated_graphql::<IssuesWithLabelsQuery>(issues_with_labels_query::Variables {
+            owner: "rust-lang".into(),
+            name: "rust".into(),
+            labels: vec!["B-RFC-approved".into(), "B-RFC-implemented".into()],
+            after: None,
+        })
         .await?
         .into_data()
         .map_err(Error::GraphQl)?;
@@ -30,46 +34,6 @@ pub(super) async fn get_tracking_issues() -> Result<Vec<TrackingIssue>, Error> {
     tracking_issues.sort_by_key(|issue| (issue.rfc, issue.created_at, issue.closed_at));
 
     Ok(tracking_issues)
-}
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "res/graphql/github-schema.graphql",
-    query_path = "res/graphql/rust-rfc-query.graphql"
-)]
-pub struct RustRfcQuery;
-
-impl github::PaginatedQuery for RustRfcQuery {
-    fn page_info(data: &Self::ResponseData) -> github::PageInfo {
-        let page_info = &data
-            .repository
-            .as_ref()
-            .expect("repo exists")
-            .issues
-            .page_info;
-
-        github::PageInfo {
-            end_cursor: page_info.end_cursor.clone(),
-            has_next_page: page_info.has_next_page,
-        }
-    }
-
-    fn with_after(_: &Self::Variables, after: Option<String>) -> Self::Variables {
-        rust_rfc_query::Variables { after }
-    }
-
-    fn merge_page(acc: &mut Self::ResponseData, page: Self::ResponseData) {
-        let issues = &mut acc.repository.as_mut().expect("repo exists").issues;
-
-        match (
-            issues.edges.as_mut(),
-            page.repository.expect("repo exists").issues.edges,
-        ) {
-            (_, None) => (),
-            (None, Some(edges)) => issues.edges = Some(edges),
-            (Some(acc), Some(mut page)) => acc.append(&mut page),
-        }
-    }
 }
 
 #[derive(Debug)]

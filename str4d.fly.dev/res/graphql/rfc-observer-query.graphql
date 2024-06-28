@@ -1,9 +1,14 @@
-query RustRfcQuery($after: String) {
-  repository(owner: "rust-lang", name: "rust") {
+query IssuesWithLabelsQuery(
+  $owner: String!,
+  $name: String!,
+  $labels: [String!]!,
+  $after: String
+) {
+  repository(owner: $owner, name: $name) {
     issues(
       first: 100
       after: $after
-      labels: ["B-RFC-approved", "B-RFC-implemented"]
+      labels: $labels
     ) {
       pageInfo {
         hasNextPage

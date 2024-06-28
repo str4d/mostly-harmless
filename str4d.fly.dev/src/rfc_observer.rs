@@ -1,6 +1,8 @@
 use askama::Template;
 use axum::{routing::get, Router};
 
+pub(crate) mod common;
+
 pub(crate) mod rust;
 
 pub(crate) fn build() -> Router {
