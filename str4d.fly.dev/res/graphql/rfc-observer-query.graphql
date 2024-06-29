@@ -16,43 +16,72 @@ query IssuesWithLabelsQuery(
       }
       edges {
         node {
-          number
-          title
+          ...Common
+        }
+      }
+    }
+  }
+}
+
+query IssuesWithLabelsAndBodyQuery(
+  $owner: String!,
+  $name: String!,
+  $labels: [String!]!,
+  $after: String
+) {
+  repository(owner: $owner, name: $name) {
+    issues(
+      first: 100
+      after: $after
+      labels: $labels
+    ) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        node {
+          ...Common
           body
+        }
+      }
+    }
+  }
+}
+
+fragment Common on Issue {
+  number
+  title
+  createdAt
+  closedAt
+  labels(
+    first: 100,
+    orderBy: {field: NAME, direction: ASC}
+  ) {
+    edges {
+      node {
+        name
+      }
+    }
+  }
+  timelineItems(
+    last: 100,
+    itemTypes: [LABELED_EVENT, UNLABELED_EVENT]
+  ) {
+    totalCount
+    edges {
+      node {
+        __typename
+        ... on LabeledEvent {
           createdAt
-          closedAt
-          labels(
-            first: 100,
-            orderBy: {field: NAME, direction: ASC}
-          ) {
-            edges {
-              node {
-                name
-              }
-            }
+          label {
+            name
           }
-          timelineItems(
-            last: 100,
-            itemTypes: [LABELED_EVENT, UNLABELED_EVENT]
-          ) {
-            totalCount
-            edges {
-              node {
-                __typename
-                ... on LabeledEvent {
-                  createdAt
-                  label {
-                    name
-                  }
-                }
-                ... on UnlabeledEvent {
-                  createdAt
-                  label {
-                    name
-                  }
-                }
-              }
-            }
+        }
+        ... on UnlabeledEvent {
+          createdAt
+          label {
+            name
           }
         }
       }

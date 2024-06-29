@@ -1,5 +1,5 @@
 use crate::{
-    rfc_observer::common::{issues_with_labels_query, IssuesWithLabelsQuery},
+    rfc_observer::common::{issues_with_labels_and_body_query, IssuesWithLabelsAndBodyQuery},
     util::github,
 };
 
@@ -9,12 +9,14 @@ pub(super) async fn get_tracking_issues() -> Result<Vec<TrackingIssue>, Error> {
     let client = github::Client::new("rust.rfc.observer")?;
 
     let data = client
-        .post_paginated_graphql::<IssuesWithLabelsQuery>(issues_with_labels_query::Variables {
-            owner: "rust-lang".into(),
-            name: "rust".into(),
-            labels: vec!["B-RFC-approved".into(), "B-RFC-implemented".into()],
-            after: None,
-        })
+        .post_paginated_graphql::<IssuesWithLabelsAndBodyQuery>(
+            issues_with_labels_and_body_query::Variables {
+                owner: "rust-lang".into(),
+                name: "rust".into(),
+                labels: vec!["B-RFC-approved".into(), "B-RFC-implemented".into()],
+                after: None,
+            },
+        )
         .await?
         .into_data()
         .map_err(Error::GraphQl)?;

@@ -7,8 +7,8 @@ use serde::Serialize;
 use tracing::debug;
 
 use crate::rfc_observer::common::{
-    issues_with_labels_query::IssuesWithLabelsQueryRepositoryIssuesEdgesNode, label_events_for,
-    LabelEvent,
+    issues_with_labels_and_body_query::IssuesWithLabelsAndBodyQueryRepositoryIssuesEdgesNode,
+    label_events_for_bodied, LabelEvent,
 };
 
 /// Issues that get detected as RFC tracking issues, but that should be ignored (because
@@ -47,13 +47,15 @@ pub(super) struct TrackingIssue {
 }
 
 impl TrackingIssue {
-    pub(super) fn new(issue: IssuesWithLabelsQueryRepositoryIssuesEdgesNode) -> Option<Self> {
-        if ISSUES_TO_IGNORE.contains(&issue.number) {
+    pub(super) fn new(
+        issue: IssuesWithLabelsAndBodyQueryRepositoryIssuesEdgesNode,
+    ) -> Option<Self> {
+        if ISSUES_TO_IGNORE.contains(&issue.common.number) {
             return None;
         }
 
         // Attempt to identify the RFC.
-        let rfc = match RFC_FOR_ISSUE.get(&issue.number) {
+        let rfc = match RFC_FOR_ISSUE.get(&issue.common.number) {
             Some(rfc) => *rfc,
             None => match RE_RFC_PR
                 .get_or_init(|| Regex::new(r"rust-lang\/rfcs(\/pull\/|#)(\d+)").unwrap())
@@ -78,25 +80,25 @@ impl TrackingIssue {
                         .get_or_init(|| {
                             Regex::new(r"Tracking [iI]ssue for? RFC (#|PR )?(\d+)").unwrap()
                         })
-                        .captures(&issue.title)
+                        .captures(&issue.common.title)
                         .and_then(|c| c.get(2))
                 }) {
                 Some(rfc) => rfc.as_str().parse().expect("checked"),
                 None => {
-                    debug!(number = issue.number, "No RFC number found");
+                    debug!(number = issue.common.number, "No RFC number found");
                     return None;
                 }
             },
         };
 
-        let label_events = label_events_for::<Label>(issue.timeline_items);
+        let label_events = label_events_for_bodied::<Label>(issue.common.timeline_items);
 
         Some(TrackingIssue {
-            number: issue.number,
-            title: issue.title,
+            number: issue.common.number,
+            title: issue.common.title,
             rfc,
-            created_at: issue.created_at,
-            closed_at: issue.closed_at,
+            created_at: issue.common.created_at,
+            closed_at: issue.common.closed_at,
             label_events,
         })
     }
