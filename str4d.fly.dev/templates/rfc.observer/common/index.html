@@ -76,7 +76,11 @@
             options: {
                 scales: {
                     x: {
-                        type: 'time'
+                        type: 'time',
+                        time: {
+                            // Format: https://moment.github.io/luxon/#/formatting?id=table-of-tokens
+                            tooltipFormat: 'DD'
+                        }
                     },
                     y: {
                         stacked: true

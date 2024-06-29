@@ -1,6 +1,6 @@
 use std::{cell::OnceCell, collections::BTreeMap, str::FromStr};
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use phf::phf_map;
 use regex::Regex;
 use serde::Serialize;
@@ -41,9 +41,9 @@ pub(super) struct TrackingIssue {
     title: String,
     pub(super) rfc: u32,
     pub(super) created_at: DateTime<Utc>,
-    pub(super) approved_at: DateTime<Utc>,
-    pub(super) implemented_at: Option<DateTime<Utc>>,
     pub(super) closed_at: Option<DateTime<Utc>>,
+    #[serde(skip)]
+    label_events: Vec<LabelEvent<Label>>,
 }
 
 impl TrackingIssue {
@@ -91,37 +91,18 @@ impl TrackingIssue {
 
         let label_events = label_events_for::<Label>(issue.timeline_items);
 
-        let approved_at = label_events
-            .iter()
-            .find_map(|evt| match evt {
-                LabelEvent::Applied {
-                    label: Label::RfcApproved,
-                    at,
-                } => Some(*at),
-                _ => None,
-            })
-            .unwrap_or(issue.created_at);
-
-        let implemented_at = label_events.iter().find_map(|evt| match evt {
-            LabelEvent::Applied {
-                label: Label::RfcImplemented,
-                at,
-            } => Some(*at),
-            _ => None,
-        });
-
         Some(TrackingIssue {
             number: issue.number,
             title: issue.title,
             rfc,
             created_at: issue.created_at,
-            approved_at,
-            implemented_at,
             closed_at: issue.closed_at,
+            label_events,
         })
     }
 }
 
+#[derive(Clone, Copy, Debug)]
 enum Label {
     RfcApproved,
     RfcImplemented,
@@ -139,13 +120,13 @@ impl FromStr for Label {
     }
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub(super) struct Aggregate {
-    date: DateTime<Utc>,
-    created: usize,
-    approved: usize,
-    implemented: usize,
-    closed: usize,
+    date: NaiveDate,
+    created: u64,
+    approved: u64,
+    implemented: u64,
+    closed: u64,
 }
 
 #[derive(Clone, Serialize)]
@@ -157,58 +138,139 @@ pub(super) struct Data {
 
 impl Data {
     pub(super) fn new(tracking_issues: Vec<TrackingIssue>) -> Self {
-        #[derive(PartialEq, Eq, PartialOrd, Ord)]
-        enum Event {
+        enum State {
             Created,
             Approved,
             Implemented,
-            Closed,
         }
 
-        let mut events = tracking_issues
-            .iter()
-            .flat_map(|issue| {
-                [
-                    (issue.created_at, Event::Created),
-                    (issue.approved_at, Event::Approved),
-                ]
-                .into_iter()
-                .chain(
-                    issue
-                        .implemented_at
-                        .or(issue.closed_at)
-                        .map(|d| (d, Event::Implemented)),
-                )
-                .chain(issue.closed_at.map(|d| (d, Event::Closed)))
-            })
-            .collect::<Vec<_>>();
+        // First, build up a map of deltas for each day we have a label event on.
+        #[derive(Debug, Default)]
+        struct Deltas {
+            created: i64,
+            approved: i64,
+            implemented: i64,
+            closed: i64,
+        }
+        let mut deltas = BTreeMap::<_, Deltas>::new();
+        fn day<'d>(
+            deltas: &'d mut BTreeMap<NaiveDate, Deltas>,
+            at: &DateTime<Utc>,
+        ) -> &'d mut Deltas {
+            deltas.entry(at.date_naive()).or_default()
+        }
 
-        events.sort();
+        for issue in &tracking_issues {
+            let mut state = State::Created;
+            day(&mut deltas, &issue.created_at).created += 1;
 
-        let mut created = 0;
-        let mut approved = 0;
-        let mut implemented = 0;
-        let mut closed = 0;
-        let mut data = BTreeMap::new();
+            for event in &issue.label_events {
+                match event {
+                    LabelEvent::Applied { at, label } => match (issue.closed_at, &mut state, label)
+                    {
+                        // Ignore label events after the tracking issue is closed.
+                        (Some(closed), _, _) if closed <= *at => (),
 
-        for (date, event) in events {
-            match event {
-                Event::Created => created += 1,
-                Event::Approved => {
-                    created -= 1;
-                    approved += 1;
-                }
-                Event::Implemented => {
-                    approved -= 1;
-                    implemented += 1;
-                }
-                Event::Closed => {
-                    implemented -= 1;
-                    closed += 1;
+                        // Ignore label events that don't change state.
+                        (_, State::Approved, Label::RfcApproved)
+                        | (_, State::Implemented, Label::RfcImplemented) => (),
+
+                        // State transitions due to new labels.
+                        (_, State::Created, Label::RfcApproved) => {
+                            let d = day(&mut deltas, at);
+                            d.created -= 1;
+                            d.approved += 1;
+                            state = State::Approved;
+                        }
+                        (_, State::Implemented, Label::RfcApproved) => {
+                            let d = day(&mut deltas, at);
+                            d.implemented -= 1;
+                            d.approved += 1;
+                            state = State::Approved;
+                        }
+                        (_, State::Created, Label::RfcImplemented) => {
+                            let d = day(&mut deltas, at);
+                            d.created -= 1;
+                            d.implemented += 1;
+                            state = State::Implemented;
+                        }
+                        (_, State::Approved, Label::RfcImplemented) => {
+                            let d = day(&mut deltas, at);
+                            d.approved -= 1;
+                            d.implemented += 1;
+                            state = State::Implemented;
+                        }
+                    },
+
+                    LabelEvent::Removed { at, label } => match (issue.closed_at, &mut state, label)
+                    {
+                        // Ignore label events after the tracking issue is closed.
+                        (Some(closed), _, _) if closed <= *at => (),
+
+                        // Ignore label events that don't change state.
+                        (_, State::Created | State::Implemented, Label::RfcApproved)
+                        | (_, State::Created | State::Approved, Label::RfcImplemented) => (),
+
+                        // State transitions due to removed labels.
+                        (_, State::Approved, Label::RfcApproved) => {
+                            let d = day(&mut deltas, at);
+                            d.approved -= 1;
+                            d.created += 1;
+                            state = State::Created;
+                        }
+                        (_, State::Implemented, Label::RfcImplemented) => {
+                            let d = day(&mut deltas, at);
+                            d.implemented -= 1;
+                            d.created += 1;
+                            state = State::Created;
+                        }
+                    },
                 }
             }
-            *(data.entry(date).or_default()) = (created, approved, implemented, closed);
+
+            if let Some(at) = issue.closed_at {
+                let d = day(&mut deltas, &at);
+                match state {
+                    State::Created => d.created -= 1,
+                    State::Approved => d.approved -= 1,
+                    State::Implemented => d.implemented -= 1,
+                }
+                d.closed += 1;
+            }
         }
+
+        // Then, create a running sum of the deltas to get the category counts per day.
+        let agg = deltas
+            .into_iter()
+            .scan(None, |state, (date, deltas)| {
+                match state {
+                    None => {
+                        *state = Some(Aggregate {
+                            date,
+                            created: deltas.created.try_into().expect("first day"),
+                            approved: deltas.approved.try_into().expect("first day"),
+                            implemented: deltas.implemented.try_into().expect("first day"),
+                            closed: deltas.closed.try_into().expect("first day"),
+                        })
+                    }
+                    Some(d) => {
+                        d.date = date;
+                        d.created = d.created.checked_add_signed(deltas.created).expect("fine");
+                        d.approved = d
+                            .approved
+                            .checked_add_signed(deltas.approved)
+                            .expect("fine");
+                        d.implemented = d
+                            .implemented
+                            .checked_add_signed(deltas.implemented)
+                            .expect("fine");
+                        d.closed = d.closed.checked_add_signed(deltas.closed).expect("fine");
+                    }
+                }
+
+                state.clone()
+            })
+            .collect();
 
         let open = tracking_issues
             .iter()
@@ -221,21 +283,6 @@ impl Data {
             .filter(|issue| issue.closed_at.is_some())
             .collect();
 
-        Self {
-            agg: data
-                .into_iter()
-                .map(
-                    |(date, (created, approved, implemented, closed))| Aggregate {
-                        date,
-                        created,
-                        approved,
-                        implemented,
-                        closed,
-                    },
-                )
-                .collect(),
-            open,
-            closed,
-        }
+        Self { agg, open, closed }
     }
 }
