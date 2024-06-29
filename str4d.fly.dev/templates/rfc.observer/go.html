@@ -1,0 +1,45 @@
+{% extends "common/index.html" %}
+
+{% block title %}Go Proposal Observer{% endblock %}
+{% block iconheader %}<img src="https://www.svgrepo.com/show/373635/go-gopher.svg" style="height: 128pt">🔍{% endblock
+%}
+{% block textheader %}Go Proposals{% endblock %}
+
+{% block scriptvars %}
+<script>
+    vars.fetchingStatus = "Fetching proposals...";
+    vars.loadedStatus = (data) => `There are ${data.open.length + data.closed.length} proposals, of which ${data.open.length} are still open.`;
+    vars.datasets = (aggregate) => [
+        {
+            label: 'Created',
+            data: aggregate.map(row => row.created)
+        },
+        {
+            label: 'On Hold',
+            data: aggregate.map(row => row.on_hold)
+        },
+        {
+            label: 'Accepted',
+            data: aggregate.map(row => row.accepted)
+        },
+        {
+            label: 'Implemented',
+            data: aggregate.map(row => row.implemented)
+        },
+        {
+            label: 'Closed',
+            data: aggregate.map(row => row.closed)
+        }
+    ];
+    vars.renderIssue = (issue, a) => {
+        a.href = `https://github.com/golang/go/issues/${issue.number}`;
+        if (!issue.closed_at) {
+            let created = Date.parse(issue.created_at);
+            let age = Date.now() - created;
+            let age_in_days = Math.round(age / (1000 * 3600 * 24));
+            a.innerHTML += `${age_in_days} days old: `;
+        }
+        a.innerHTML += `(Proposal ${issue.number}) ${issue.title}`;
+    };
+</script>
+{% endblock %}
