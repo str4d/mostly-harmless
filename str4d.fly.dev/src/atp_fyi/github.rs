@@ -120,8 +120,8 @@ impl Author {
     fn parse(val: Option<social_app_query::SocialAppQueryRepositoryIssuesEdgesNodeAuthor>) -> Self {
         val.map_or(Author::Community, |author| match author.login.as_str() {
             "ansh" | "bnewbold" | "devinivy" | "dholms" | "emilyliu7321" | "ericvolp12"
-            | "estrattonbailey" | "gaearon" | "Jacob2161" | "pfrazee" | "renahlee"
-            | "whyrusleeping" => Author::Devs,
+            | "estrattonbailey" | "haileyok" | "gaearon" | "Jacob2161" | "matthieusieben"
+            | "mozzius" | "pfrazee" | "renahlee" | "whyrusleeping" => Author::Devs,
             _ => Author::Community,
         })
     }
