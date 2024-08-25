@@ -3,7 +3,7 @@ use atrium_api::{
     app::{self, bsky::feed::post::RecordEmbedRefs::AppBskyEmbedImagesMain},
     client::AtpServiceClient,
     com::atproto::repo::list_records,
-    types::{BlobRef, TypedBlobRef, Union},
+    types::{BlobRef, TryFromUnknown, TypedBlobRef, Union},
 };
 use atrium_xrpc_client::reqwest::ReqwestClientBuilder;
 use axum::{routing::get, Router};
@@ -61,12 +61,12 @@ async fn get_feed() -> anyhow::Result<Vec<(String, Post)>> {
         .data
         .records
         .into_iter()
-        .filter_map(|r| match r.data.value {
-            atrium_api::records::Record::Known(
-                atrium_api::records::KnownRecord::AppBskyFeedPost(post),
-            ) => Some((r.data.cid.as_ref().to_string(), Post(*post))),
-            _ => None,
-        })
+        .filter_map(
+            |r| match app::bsky::feed::post::Record::try_from_unknown(r.data.value) {
+                Ok(post) => Some((r.data.cid.as_ref().to_string(), Post(post))),
+                _ => None,
+            },
+        )
         .collect())
 }
 
