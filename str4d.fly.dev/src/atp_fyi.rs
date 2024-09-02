@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use askama::Template;
 use askama_web::WebTemplate;
-use axum::{Router, routing::get};
+use axum::{Extension, Json, Router, routing::get};
 use cached::proc_macro::cached;
 
 mod github;
@@ -11,7 +11,9 @@ pub(crate) mod network;
 pub(crate) fn build() -> Router {
     Router::new()
         .route("/", get(index))
+        .route("/network", get(network))
         .route("/roadmap", get(roadmap))
+        .route("/api/network-map", get(network_map))
 }
 
 #[derive(Clone, Template, WebTemplate)]
@@ -24,6 +26,27 @@ async fn index() -> Index {
     Index {
         rates: network::firehose::average_rates_per_min().await,
     }
+}
+
+#[derive(Clone, Template, WebTemplate)]
+#[template(path = "atp.fyi/network.html")]
+struct Network {}
+
+async fn network() -> Network {
+    Network {}
+}
+
+#[cached(time = 600, key = "()", convert = r##"{}"##)]
+async fn network_map(Extension(client): Extension<reqwest::Client>) -> Json<Option<network::Map>> {
+    let map = match self::network::render_map(&client).await {
+        Ok(map) => Some(map),
+        Err(e) => {
+            tracing::error!("Failed to render network map: {:?}", e);
+            None
+        }
+    };
+
+    Json(map)
 }
 
 #[derive(Clone, Template, WebTemplate)]

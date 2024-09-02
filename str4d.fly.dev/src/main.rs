@@ -1,6 +1,7 @@
+use std::env;
 use std::net::{IpAddr, Ipv6Addr};
 
-use axum::ServiceExt;
+use axum::{Extension, ServiceExt};
 use metrics_exporter_prometheus::PrometheusBuilder;
 use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
@@ -41,9 +42,21 @@ async fn main() {
         tracing::error!("Failed to install metrics server: {}", e);
     };
 
+    // Client for outbound HTTP requests.
+    let client = match reqwest::Client::builder().user_agent("atp.fyi").build() {
+        Ok(client) => client,
+        Err(e) => {
+            tracing::error!("Failed to build an HTTP client: {e}");
+            return;
+        }
+    };
+
     // Set up background services.
     tracing::info!("Starting background services");
-    tokio::spawn(async { atp_fyi::network::firehose::monitor().await });
+    if env::var("CARGO").is_err() {
+        let client = client.clone();
+        tokio::spawn(async { atp_fyi::network::firehose::monitor(client).await });
+    }
 
     tracing::info!("Starting server");
     let app = util::Multiplexer::new()
@@ -67,6 +80,7 @@ async fn main() {
         .handle("ietf.rfc.observer", rfc_observer::ietf::build())
         .handle("go.rfc.observer", rfc_observer::go::build())
         .handle("rust.rfc.observer", rfc_observer::rust::build())
+        .layer(Extension(client))
         .layer(util::MetricsLayer::new())
         .layer(TraceLayer::new_for_http());
 

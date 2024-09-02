@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Bluesky network map{% endblock %}
+
+{% block head %}
+<style>
+    #atproto-map {
+        border: 1px solid lightgray;
+        background: white;
+        width: 100%;
+        height: 600px;
+    }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sigma.js/2.4.0/sigma.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/graphology/0.25.4/graphology.umd.min.js"></script>
+<script src="https://github.com/graphology/graphology/releases/download/0.25.4/graphology-library.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div id="nav"><a href="/">🏠 Home</a></div>
+
+<h1>Bluesky network map</h1>
+
+<div id="status-box">
+    <p id="status-text"></p>
+</div>
+
+<div id="atproto-map"></div>
+
+<script type="text/javascript">
+    const kinds = {
+        BskyPds: "input",
+        Pds: "input",
+        Relay: "middle",
+        Labeler: "middle",
+        Feed: "output",
+        AppView: "output",
+    };
+    const groups = {
+        BskyPds: "pds",
+        Pds: "pds",
+        Relay: "relay",
+        Labeler: "labeler",
+        Feed: "feed",
+        AppView: "appview",
+    };
+    const colours = {
+        BskyPds: "#1185fe",
+        Pds: "blue",
+        Relay: "orange",
+        Labeler: "red",
+        Feed: "grey",
+        AppView: "green",
+    };
+
+    function graphMap(map) {
+        // Create a graphology graph
+        const graph = new graphology.Graph();
+        map.nodes.forEach((node, index) => {
+            graph.addNode(index, {
+                kind: kinds[node.group],
+                group: groups[node.group],
+                label: node.label,
+                size: node.size,
+                color: colours[node.group],
+            });
+        });
+        map.edges.forEach((edge) => {
+            graph.addEdge(edge.from, edge.to, {
+                size: edge.size,
+                color: edge.colour,
+            });
+        });
+
+        graphologyLibrary.layout.circlepack.assign(graph, {
+            hierarchyAttributes: ["kind", "group"],
+        });
+
+        // Instantiate sigma.js and render the graph
+        const renderer = new Sigma(graph, document.getElementById("atproto-map"));
+        renderer.setSetting("labelRenderedSizeThreshold", 1000000);
+
+        // Declare internal state:
+        const state = {};
+
+        function setHoveredNode(node) {
+            if (node) {
+                state.hoveredNode = node;
+                state.hoveredNodeGroup = graph.getNodeAttribute(node, "group")
+                state.hoveredNeighbors = new Set(graph.neighbors(node));
+            }
+
+            if (!node) {
+                state.hoveredNode = undefined;
+                state.hoveredNodeGroup = undefined;
+                state.hoveredNeighbors = undefined;
+            }
+
+            // Refresh rendering
+            renderer.refresh({
+                // We don't touch the graph data so we can skip its reindexation
+                skipIndexation: true,
+            });
+        }
+
+        // Bind graph interactions:
+        renderer.on("enterNode", ({ node }) => {
+            setHoveredNode(node);
+        });
+        renderer.on("leaveNode", () => {
+            setHoveredNode(undefined);
+        });
+
+        // Render nodes accordingly to the internal state:
+        // 1. If there is a hovered relay node, all non-neighbor nodes are greyed
+        renderer.setSetting("nodeReducer", (node, data) => {
+            const res = { ...data };
+
+            if (state.hoveredNodeGroup === "relay") {
+                if (state.hoveredNeighbors && !state.hoveredNeighbors.has(node) && state.hoveredNode !== node) {
+                    res.label = "";
+                    res.color = "#f6f6f6";
+                }
+            }
+
+            return res;
+        });
+
+        // Render edges accordingly to the internal state:
+        // 1. The edge is hidden if it is not connected to the hovered node.
+        renderer.setSetting("edgeReducer", (edge, data) => {
+            const res = { ...data };
+
+            if (
+                !graph.extremities(edge).every((n) => n === state.hoveredNode || graph.areNeighbors(n, state.hoveredNode))
+            ) {
+                res.hidden = true;
+            }
+
+            return res;
+        });
+    }
+
+    const statusText = document.getElementById('status-text');
+
+    statusText.textContent = "Building network map...";
+
+    fetch("/api/network-map")
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error(`HTTP error: ${response.status}`);
+            }
+
+            return response.json();
+        })
+        .then((map) => {
+            statusText.textContent = "";
+            graphMap(map);
+        })
+        .catch((error) => {
+            console.error(error);
+            statusText.textContent = `Failed to load data: ${error}`;
+        });
+</script>
+
+{% endblock %}

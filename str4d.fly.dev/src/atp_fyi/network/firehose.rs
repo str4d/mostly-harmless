@@ -9,8 +9,7 @@ static TRACKER: OnceLock<RwLock<MetricsTracker>> = OnceLock::new();
 const ONE_MINUTE: time::Duration = time::Duration::from_secs(60);
 const ONE_DAY: time::Duration = time::Duration::from_secs(24 * 60 * 60);
 
-pub(crate) async fn monitor() -> anyhow::Result<()> {
-    let client = reqwest::Client::builder().build()?;
+pub(crate) async fn monitor(client: reqwest::Client) -> anyhow::Result<()> {
     let _ = TRACKER.set(RwLock::new(MetricsTracker::init(&client).await?));
 
     let mut interval = time::interval(ONE_MINUTE);
