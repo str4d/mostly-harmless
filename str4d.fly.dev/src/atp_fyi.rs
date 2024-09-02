@@ -13,10 +13,14 @@ pub(crate) fn build() -> Router {
 
 #[derive(Clone, Template)]
 #[template(path = "atp.fyi/index.html")]
-struct Index {}
+struct Index {
+    rates: Option<network::firehose::FirehoseRate>,
+}
 
 async fn index() -> Index {
-    Index {}
+    Index {
+        rates: network::firehose::average_rates_per_min().await,
+    }
 }
 
 #[derive(Clone, Template)]
@@ -35,4 +39,14 @@ async fn roadmap() -> Roadmap {
         }
     };
     Roadmap { roadmap }
+}
+
+mod filters {
+    pub fn fmtf64(value: &f64) -> ::askama::Result<String> {
+        if *value >= 100.0 {
+            Ok(format!("{value:.0}"))
+        } else {
+            Ok(format!("{value:.3}"))
+        }
+    }
 }

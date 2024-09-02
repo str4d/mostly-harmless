@@ -12,6 +12,24 @@
 
 <h2><a href="roadmap">🗺️ Unofficial roadmap</a></h2>
 
+{% match rates %}
+{% when Some with (rates) %}
+<h2>Firehose rates</h2>
+<p>These are averages over the past 24 hours.</p>
+<ul>
+    <li>Total: {{ rates.ops_total|fmtf64 }} ops/min</li>
+    <li>By AppView:
+        <ul>
+            <li>Bluesky: {{ rates.ops_bluesky|fmtf64 }} ops/min</li>
+            <li>White Wind: {{ rates.ops_whitewind|fmtf64 }} ops/min</li>
+            <li>Smoke Signal: {{ rates.ops_smokesignal|fmtf64 }} ops/min</li>
+            <li>Frontpage: {{ rates.ops_frontpage|fmtf64 }} ops/min</li>
+        </ul>
+    </li>
+</ul>
+{% when None %}
+{% endmatch %}
+
 <h2>Explainers</h2>
 <ul>
     <li><a href="https://write.as/lajpcs033np8qypv.md">"What Information is Public on Bluesky?"</a> by <a
