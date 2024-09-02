@@ -3,6 +3,7 @@ use axum::{routing::get, Router};
 use cached::proc_macro::cached;
 
 mod github;
+pub(crate) mod network;
 
 pub(crate) fn build() -> Router {
     Router::new()

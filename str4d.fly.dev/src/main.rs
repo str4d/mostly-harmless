@@ -40,6 +40,10 @@ async fn main() {
         tracing::error!("Failed to install metrics server: {}", e);
     };
 
+    // Set up background services.
+    tracing::info!("Starting background services");
+    tokio::spawn(async { atp_fyi::network::firehose::monitor().await });
+
     tracing::info!("Starting server");
     let app = util::Multiplexer::new()
         .add("www.jackgrigg.com", ["jackgrigg.com"], jackgrigg_com::www())
