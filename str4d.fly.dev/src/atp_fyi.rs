@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use askama::Template;
 use axum::{routing::get, Router};
 use cached::proc_macro::cached;
@@ -14,7 +16,7 @@ pub(crate) fn build() -> Router {
 #[derive(Clone, Template)]
 #[template(path = "atp.fyi/index.html")]
 struct Index {
-    rates: Option<network::firehose::FirehoseRate>,
+    rates: Option<(network::firehose::FirehoseRate, Duration)>,
 }
 
 async fn index() -> Index {
@@ -42,6 +44,22 @@ async fn roadmap() -> Roadmap {
 }
 
 mod filters {
+    use std::time::Duration;
+
+    pub fn fmtduration(d: &Duration) -> ::askama::Result<String> {
+        let d = chrono::TimeDelta::from_std(*d).map_err(|e| askama::Error::Custom(Box::new(e)))?;
+        let half_past = d.num_minutes() >= 30;
+
+        match d.num_hours() {
+            0 => match d.num_minutes() {
+                1 => Ok("minute".into()),
+                n => Ok(format!("{} minutes", n)),
+            },
+            1 if !half_past => Ok("hour".into()),
+            n => Ok(format!("{} hours", n + if half_past { 1 } else { 0 })),
+        }
+    }
+
     pub fn fmtf64(value: &f64) -> ::askama::Result<String> {
         if *value >= 100.0 {
             Ok(format!("{value:.0}"))

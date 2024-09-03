@@ -13,9 +13,9 @@
 <h2><a href="roadmap">🗺️ Unofficial roadmap</a></h2>
 
 {% match rates %}
-{% when Some with (rates) %}
+{% when Some with ((rates, interval)) %}
 <h2>Firehose rates</h2>
-<p>These are averages over the past 24 hours.</p>
+<p>These are averages over the past {{ interval|fmtduration }}.</p>
 <ul>
     <li>Total: {{ rates.ops_total|fmtf64 }} ops/min</li>
     <li>By AppView:

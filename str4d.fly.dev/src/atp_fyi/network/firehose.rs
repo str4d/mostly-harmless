@@ -30,7 +30,9 @@ pub(crate) async fn monitor() -> anyhow::Result<()> {
     }
 }
 
-pub(crate) async fn average_rates_per_min() -> Option<FirehoseRate> {
+/// Returns the average firehose rates per minute, and the duration over which the average
+/// is taken.
+pub(crate) async fn average_rates_per_min() -> Option<(FirehoseRate, time::Duration)> {
     if let Some(tracker) = TRACKER.get() {
         Some(tracker.read().await.average_per_min())
     } else {
@@ -85,7 +87,7 @@ impl MetricsTracker {
         self.last_count = data;
     }
 
-    fn average_per_min(&self) -> FirehoseRate {
+    fn average_per_min(&self) -> (FirehoseRate, time::Duration) {
         let day_sum = self
             .day_changes
             .iter()
@@ -102,13 +104,24 @@ impl MetricsTracker {
             .unwrap_or_default();
         let day_count = self.day_changes.len() as f64;
 
-        FirehoseRate {
-            ops_total: day_sum.ops_total as f64 / day_count,
-            ops_bluesky: day_sum.ops_bluesky as f64 / day_count,
-            ops_frontpage: day_sum.ops_frontpage as f64 / day_count,
-            ops_smokesignal: day_sum.ops_smokesignal as f64 / day_count,
-            ops_whitewind: day_sum.ops_whitewind as f64 / day_count,
-        }
+        // The data range is at most 24 hours by construction, but may be fewer.
+        let day_range = self
+            .day_changes
+            .front()
+            .zip(self.day_changes.back())
+            .map(|((latest, _), (earliest, _))| *latest - *earliest)
+            .unwrap_or(time::Duration::ZERO);
+
+        (
+            FirehoseRate {
+                ops_total: day_sum.ops_total as f64 / day_count,
+                ops_bluesky: day_sum.ops_bluesky as f64 / day_count,
+                ops_frontpage: day_sum.ops_frontpage as f64 / day_count,
+                ops_smokesignal: day_sum.ops_smokesignal as f64 / day_count,
+                ops_whitewind: day_sum.ops_whitewind as f64 / day_count,
+            },
+            day_range,
+        )
     }
 }
 
