@@ -59,15 +59,20 @@ impl MetricsTracker {
     }
 
     fn accumulate(&mut self, now: time::Instant, data: FirehoseCount) {
-        let latest_delta = FirehoseCount {
-            ops_total: data.ops_total - self.last_count.ops_total,
-            ops_bluesky: data.ops_bluesky - self.last_count.ops_bluesky,
-            ops_frontpage: data.ops_frontpage - self.last_count.ops_frontpage,
-            ops_smokesignal: data.ops_smokesignal - self.last_count.ops_smokesignal,
-            ops_whitewind: data.ops_whitewind - self.last_count.ops_whitewind,
-        };
+        // If the newly-fetched total is smaller than the previous total, the data source
+        // has reset; we skip aggregating this delta and save the new count for the next.
+        if data.ops_total >= self.last_count.ops_total {
+            let latest_delta = FirehoseCount {
+                ops_total: data.ops_total - self.last_count.ops_total,
+                ops_bluesky: data.ops_bluesky - self.last_count.ops_bluesky,
+                ops_frontpage: data.ops_frontpage - self.last_count.ops_frontpage,
+                ops_smokesignal: data.ops_smokesignal - self.last_count.ops_smokesignal,
+                ops_whitewind: data.ops_whitewind - self.last_count.ops_whitewind,
+            };
 
-        self.day_changes.push_front((now, latest_delta));
+            self.day_changes.push_front((now, latest_delta));
+        }
+
         while self
             .day_changes
             .back()
