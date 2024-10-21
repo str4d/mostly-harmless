@@ -20,10 +20,11 @@
     <li>Total: {{ rates.ops_total|fmtf64 }} ops/min</li>
     <li>By AppView:
         <ul>
-            <li>Bluesky: {{ rates.ops_bluesky|fmtf64 }} ops/min</li>
-            <li>White Wind: {{ rates.ops_whitewind|fmtf64 }} ops/min</li>
-            <li>Smoke Signal: {{ rates.ops_smokesignal|fmtf64 }} ops/min</li>
-            <li>Frontpage: {{ rates.ops_frontpage|fmtf64 }} ops/min</li>
+            <li><a href="https://bsky.app/">Bluesky</a>: {{ rates.ops_bluesky|fmtf64 }} ops/min</li>
+            <li><a href="https://frontpage.fyi/">Frontpage</a>: {{ rates.ops_frontpage|fmtf64 }} ops/min</li>
+            <li><a href="https://psky.social/">Picosky</a>: {{ rates.ops_picosky|fmtf64 }} ops/min</li>
+            <li><a href="https://smokesignal.events/">Smoke Signal</a>: {{ rates.ops_smokesignal|fmtf64 }} ops/min</li>
+            <li><a href="https://whtwnd.com/">White Wind</a>: {{ rates.ops_whitewind|fmtf64 }} ops/min</li>
         </ul>
     </li>
 </ul>

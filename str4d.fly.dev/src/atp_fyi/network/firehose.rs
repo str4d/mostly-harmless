@@ -68,6 +68,7 @@ impl MetricsTracker {
                 ops_total: data.ops_total - self.last_count.ops_total,
                 ops_bluesky: data.ops_bluesky - self.last_count.ops_bluesky,
                 ops_frontpage: data.ops_frontpage - self.last_count.ops_frontpage,
+                ops_picosky: data.ops_picosky - self.last_count.ops_picosky,
                 ops_smokesignal: data.ops_smokesignal - self.last_count.ops_smokesignal,
                 ops_whitewind: data.ops_whitewind - self.last_count.ops_whitewind,
             };
@@ -117,6 +118,7 @@ impl MetricsTracker {
                 ops_total: day_sum.ops_total as f64 / day_count,
                 ops_bluesky: day_sum.ops_bluesky as f64 / day_count,
                 ops_frontpage: day_sum.ops_frontpage as f64 / day_count,
+                ops_picosky: day_sum.ops_picosky as f64 / day_count,
                 ops_smokesignal: day_sum.ops_smokesignal as f64 / day_count,
                 ops_whitewind: day_sum.ops_whitewind as f64 / day_count,
             },
@@ -131,6 +133,7 @@ pub(crate) struct FirehoseRate {
     pub(crate) ops_total: f64,
     pub(crate) ops_bluesky: f64,
     pub(crate) ops_frontpage: f64,
+    pub(crate) ops_picosky: f64,
     pub(crate) ops_smokesignal: f64,
     pub(crate) ops_whitewind: f64,
 }
@@ -140,6 +143,7 @@ struct FirehoseCount {
     ops_total: u64,
     ops_bluesky: u64,
     ops_frontpage: u64,
+    ops_picosky: u64,
     ops_smokesignal: u64,
     ops_whitewind: u64,
 }
@@ -156,6 +160,7 @@ impl FromStr for FirehoseCount {
                         "atproto_firehose_ops_total" => metrics.ops_total = count,
                         "atproto_firehose_ops_bluesky" => metrics.ops_bluesky = count,
                         "atproto_firehose_ops_frontpage" => metrics.ops_frontpage = count,
+                        "atproto_firehose_ops_picosky" => metrics.ops_picosky = count,
                         "atproto_firehose_ops_smokesignal" => metrics.ops_smokesignal = count,
                         "atproto_firehose_ops_whitewind" => metrics.ops_whitewind = count,
                         _ => (),
