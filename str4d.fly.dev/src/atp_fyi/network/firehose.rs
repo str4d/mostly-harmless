@@ -46,10 +46,16 @@ macro_rules! record_metrics {
         $metric,
         $count,
         ("atproto_firehose_ops_total" => ops_total),
+        ("atproto_firehose_ops_atfile" => ops_atfile),
         ("atproto_firehose_ops_bluesky" => ops_bluesky),
+        ("atproto_firehose_ops_bluebadge" => ops_bluebadge),
+        ("atproto_firehose_ops_bookmark" => ops_bookmark),
         ("atproto_firehose_ops_frontpage" => ops_frontpage),
+        ("atproto_firehose_ops_linkat" => ops_linkat),
         ("atproto_firehose_ops_picosky" => ops_picosky),
+        ("atproto_firehose_ops_protoscript" => ops_protoscript),
         ("atproto_firehose_ops_smokesignal" => ops_smokesignal),
+        ("atproto_firehose_ops_statusphere" => ops_statusphere),
         ("atproto_firehose_ops_whitewind" => ops_whitewind)
     ));
     ($metrics:expr, $metric:expr, $count:expr, $(($known_metric:literal => $name:ident)),+) => {
@@ -67,10 +73,16 @@ macro_rules! delta {
         $current,
         $last,
         ops_total,
+        ops_atfile,
         ops_bluesky,
+        ops_bluebadge,
+        ops_bookmark,
         ops_frontpage,
+        ops_linkat,
         ops_picosky,
+        ops_protoscript,
         ops_smokesignal,
+        ops_statusphere,
         ops_whitewind
     ));
     ($current:expr, $last:expr, $($name:ident),+) => {
@@ -87,10 +99,16 @@ macro_rules! accumulate {
         $acc,
         $item,
         ops_total,
+        ops_atfile,
         ops_bluesky,
+        ops_bluebadge,
+        ops_bookmark,
         ops_frontpage,
+        ops_linkat,
         ops_picosky,
+        ops_protoscript,
         ops_smokesignal,
+        ops_statusphere,
         ops_whitewind
     ));
     ($acc:expr, $item:expr, $($name:ident),+) => {
@@ -105,10 +123,16 @@ macro_rules! rate {
         $day_sum,
         $day_count,
         ops_total,
+        ops_atfile,
         ops_bluesky,
+        ops_bluebadge,
+        ops_bookmark,
         ops_frontpage,
+        ops_linkat,
         ops_picosky,
+        ops_protoscript,
         ops_smokesignal,
+        ops_statusphere,
         ops_whitewind
     ));
     ($day_sum:expr, $day_count:expr, $($name:ident),+) => {
@@ -189,20 +213,32 @@ impl MetricsTracker {
 #[derive(Clone, Debug)]
 pub(crate) struct FirehoseRate {
     pub(crate) ops_total: f64,
+    pub(crate) ops_atfile: f64,
     pub(crate) ops_bluesky: f64,
+    pub(crate) ops_bluebadge: f64,
+    pub(crate) ops_bookmark: f64,
     pub(crate) ops_frontpage: f64,
+    pub(crate) ops_linkat: f64,
     pub(crate) ops_picosky: f64,
+    pub(crate) ops_protoscript: f64,
     pub(crate) ops_smokesignal: f64,
+    pub(crate) ops_statusphere: f64,
     pub(crate) ops_whitewind: f64,
 }
 
 #[derive(Clone, Copy, Debug, Default)]
 struct FirehoseCount {
     ops_total: u64,
+    ops_atfile: u64,
     ops_bluesky: u64,
+    ops_bluebadge: u64,
+    ops_bookmark: u64,
     ops_frontpage: u64,
+    ops_linkat: u64,
     ops_picosky: u64,
+    ops_protoscript: u64,
     ops_smokesignal: u64,
+    ops_statusphere: u64,
     ops_whitewind: u64,
 }
 
