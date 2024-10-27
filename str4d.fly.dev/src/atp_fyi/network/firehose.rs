@@ -40,6 +40,86 @@ pub(crate) async fn average_rates_per_min() -> Option<(FirehoseRate, time::Durat
     }
 }
 
+macro_rules! record_metrics {
+    ($metrics:expr, $metric:expr, $count:expr) => (record_metrics!(
+        $metrics,
+        $metric,
+        $count,
+        ("atproto_firehose_ops_total" => ops_total),
+        ("atproto_firehose_ops_bluesky" => ops_bluesky),
+        ("atproto_firehose_ops_frontpage" => ops_frontpage),
+        ("atproto_firehose_ops_picosky" => ops_picosky),
+        ("atproto_firehose_ops_smokesignal" => ops_smokesignal),
+        ("atproto_firehose_ops_whitewind" => ops_whitewind)
+    ));
+    ($metrics:expr, $metric:expr, $count:expr, $(($known_metric:literal => $name:ident)),+) => {
+        match $metric {
+            $(
+                $known_metric => $metrics.$name = $count,
+            )+
+            _ => (),
+        }
+    };
+}
+
+macro_rules! delta {
+    ($current:expr, $last:expr) => (delta!(
+        $current,
+        $last,
+        ops_total,
+        ops_bluesky,
+        ops_frontpage,
+        ops_picosky,
+        ops_smokesignal,
+        ops_whitewind
+    ));
+    ($current:expr, $last:expr, $($name:ident),+) => {
+        FirehoseCount {
+            $(
+                $name: $current.$name - $last.$name,
+            )+
+        }
+    };
+}
+
+macro_rules! accumulate {
+    ($acc:expr, $item:expr) => (accumulate!(
+        $acc,
+        $item,
+        ops_total,
+        ops_bluesky,
+        ops_frontpage,
+        ops_picosky,
+        ops_smokesignal,
+        ops_whitewind
+    ));
+    ($acc:expr, $item:expr, $($name:ident),+) => {
+        $(
+            $acc.$name += $item.$name;
+        )+
+    };
+}
+
+macro_rules! rate {
+    ($day_sum:expr, $day_count:expr) => (rate!(
+        $day_sum,
+        $day_count,
+        ops_total,
+        ops_bluesky,
+        ops_frontpage,
+        ops_picosky,
+        ops_smokesignal,
+        ops_whitewind
+    ));
+    ($day_sum:expr, $day_count:expr, $($name:ident),+) => {
+        FirehoseRate {
+            $(
+                $name: $day_sum.$name as f64 / $day_count,
+            )+
+        }
+    };
+}
+
 /// Tracks firehose metrics across the past 24 hours.
 #[derive(Debug)]
 struct MetricsTracker {
@@ -64,15 +144,7 @@ impl MetricsTracker {
         // If the newly-fetched total is smaller than the previous total, the data source
         // has reset; we skip aggregating this delta and save the new count for the next.
         if data.ops_total >= self.last_count.ops_total {
-            let latest_delta = FirehoseCount {
-                ops_total: data.ops_total - self.last_count.ops_total,
-                ops_bluesky: data.ops_bluesky - self.last_count.ops_bluesky,
-                ops_frontpage: data.ops_frontpage - self.last_count.ops_frontpage,
-                ops_picosky: data.ops_picosky - self.last_count.ops_picosky,
-                ops_smokesignal: data.ops_smokesignal - self.last_count.ops_smokesignal,
-                ops_whitewind: data.ops_whitewind - self.last_count.ops_whitewind,
-            };
-
+            let latest_delta = delta!(data, self.last_count);
             self.day_changes.push_front((now, latest_delta));
         }
 
@@ -95,11 +167,7 @@ impl MetricsTracker {
             .map(|(_, c)| c)
             .copied()
             .reduce(|mut acc, item| {
-                acc.ops_total += item.ops_total;
-                acc.ops_bluesky += item.ops_bluesky;
-                acc.ops_frontpage += item.ops_frontpage;
-                acc.ops_smokesignal += item.ops_smokesignal;
-                acc.ops_whitewind += item.ops_whitewind;
+                accumulate!(acc, item);
                 acc
             })
             .unwrap_or_default();
@@ -113,17 +181,7 @@ impl MetricsTracker {
             .map(|((latest, _), (earliest, _))| *latest - *earliest)
             .unwrap_or(time::Duration::ZERO);
 
-        (
-            FirehoseRate {
-                ops_total: day_sum.ops_total as f64 / day_count,
-                ops_bluesky: day_sum.ops_bluesky as f64 / day_count,
-                ops_frontpage: day_sum.ops_frontpage as f64 / day_count,
-                ops_picosky: day_sum.ops_picosky as f64 / day_count,
-                ops_smokesignal: day_sum.ops_smokesignal as f64 / day_count,
-                ops_whitewind: day_sum.ops_whitewind as f64 / day_count,
-            },
-            day_range,
-        )
+        (rate!(day_sum, day_count), day_range)
     }
 }
 
@@ -156,15 +214,7 @@ impl FromStr for FirehoseCount {
         for line in s.lines() {
             if let Some((metric, value)) = line.split_once(' ') {
                 if let Ok(count) = value.parse::<u64>() {
-                    match metric {
-                        "atproto_firehose_ops_total" => metrics.ops_total = count,
-                        "atproto_firehose_ops_bluesky" => metrics.ops_bluesky = count,
-                        "atproto_firehose_ops_frontpage" => metrics.ops_frontpage = count,
-                        "atproto_firehose_ops_picosky" => metrics.ops_picosky = count,
-                        "atproto_firehose_ops_smokesignal" => metrics.ops_smokesignal = count,
-                        "atproto_firehose_ops_whitewind" => metrics.ops_whitewind = count,
-                        _ => (),
-                    }
+                    record_metrics!(metrics, metric, count);
                 }
             }
         }
