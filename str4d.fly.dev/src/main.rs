@@ -10,6 +10,7 @@ mod util;
 
 mod atp_fyi;
 mod cryptography_design;
+mod cryptography_social;
 mod jackgrigg_com;
 mod rfc_observer;
 mod siso_dev;
@@ -54,6 +55,11 @@ async fn main() {
             "cryptography.design",
             ["www.cryptography.design"],
             cryptography_design::build(),
+        )
+        .add(
+            "cryptography.social",
+            ["www.cryptography.social"],
+            cryptography_social::build(),
         )
         .add("atp.fyi", ["www.atp.fyi"], atp_fyi::build())
         .add("s-s.sh", ["www.s-s.sh"], sssh::build())

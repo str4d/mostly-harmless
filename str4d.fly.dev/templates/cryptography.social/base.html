@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>{% block title %}{% endblock %}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            background: #2b2a33;
+        }
+
+        a {
+            color: #85b3b5;
+        }
+
+        #content {
+            background-color: #43424f;
+            color: #fbfbfe;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: medium;
+            padding: 20px;
+            margin: 20px;
+        }
+
+        @media screen and (max-width: 600px) {
+            #content {
+                padding: 10px;
+                margin: 10px;
+            }
+        }
+    </style>
+
+    {% block head %}{% endblock %}
+</head>
+
+<body>
+    <div id="content">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+
+</html>
