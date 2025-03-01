@@ -26,12 +26,11 @@
             data: aggregate.map(row => row.closed)
         }
     ];
-    vars.renderIssue = (issue, a) => {
+    vars.renderIssue = (issue, a, age_in_days) => {
         a.href = `https://github.com/rust-lang/rust/issues/${issue.number}`;
-        if (!issue.closed_at) {
-            let created = Date.parse(issue.created_at);
-            let age = Date.now() - created;
-            let age_in_days = Math.round(age / (1000 * 3600 * 24));
+        if (issue.closed_at) {
+            a.innerHTML += `${age_in_days} days: `;
+        } else {
             a.innerHTML += `${age_in_days} days old: `;
         }
         a.innerHTML += `(RFC ${issue.rfc}) ${issue.title}`;

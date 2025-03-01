@@ -97,7 +97,13 @@
                 let a = document.createElement('a');
                 li.appendChild(a);
                 a.target = "_blank";
-                vars.renderIssue(issue, a);
+
+                let created = Date.parse(issue.created_at);
+                let end = issue.closed_at ? Date.parse(issue.closed_at) : Date.now();
+                let age = end - created;
+                let age_in_days = Math.round(age / (1000 * 3600 * 24));
+
+                vars.renderIssue(issue, a, age_in_days);
             });
         }
 

@@ -224,10 +224,14 @@ impl Data {
             .cloned()
             .collect();
 
-        let closed = proposals
+        let mut closed = proposals
             .into_iter()
             .filter(|issue| issue.closed_at.is_some())
-            .collect();
+            .collect::<Vec<_>>();
+
+        // Sort closed issues by length of time they were open.
+        closed.sort_by_cached_key(|proposal| proposal.closed_at.unwrap() - proposal.created_at);
+        closed.reverse();
 
         Self { agg, open, closed }
     }

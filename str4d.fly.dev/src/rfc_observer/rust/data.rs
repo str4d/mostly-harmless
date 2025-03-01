@@ -280,10 +280,14 @@ impl Data {
             .cloned()
             .collect();
 
-        let closed = tracking_issues
+        let mut closed = tracking_issues
             .into_iter()
             .filter(|issue| issue.closed_at.is_some())
-            .collect();
+            .collect::<Vec<_>>();
+
+        // Sort closed issues by length of time they were open.
+        closed.sort_by_cached_key(|issue| issue.closed_at.unwrap() - issue.created_at);
+        closed.reverse();
 
         Self { agg, open, closed }
     }
