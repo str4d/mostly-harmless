@@ -64,6 +64,7 @@ async fn main() {
         .add("atp.fyi", ["www.atp.fyi"], atp_fyi::build())
         .add("s-s.sh", ["www.s-s.sh"], sssh::build())
         .add("rfc.observer", ["www.rfc.observer"], rfc_observer::build())
+        .handle("ietf.rfc.observer", rfc_observer::ietf::build())
         .handle("go.rfc.observer", rfc_observer::go::build())
         .handle("rust.rfc.observer", rfc_observer::rust::build())
         .layer(util::MetricsLayer::new())

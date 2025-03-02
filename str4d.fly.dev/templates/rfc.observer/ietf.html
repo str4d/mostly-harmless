@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>IETF RFC Observer</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            background-color: #2b2a33;
+            color: white;
+            font: 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 10px;
+        }
+
+        a {
+            color: #85b3b5;
+        }
+
+        #content {
+            background-color: #43424f;
+            color: #fbfbfe;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: medium;
+            padding: 20px;
+            margin: 20px;
+        }
+
+        @media screen and (max-width: 600px) {
+            #content {
+                padding: 10px;
+                margin: 10px;
+            }
+        }
+
+        #iconheader {
+            text-align: center;
+            font-size: 128pt;
+        }
+
+        .groups {
+            display: flex;
+            flex-flow: row wrap;
+            gap: 10px;
+            justify-content: space-around;
+        }
+
+        .groups a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .card {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+
+            background-color: #525159;
+            border: 1px solid #cad0d2;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 1px;
+            max-width: 140px;
+        }
+
+        .card:hover {
+            background-color: #5a5964;
+            border: 2px solid #cad0d2;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="content">
+        <div id="iconheader">🌐🔍</div>
+        <h2>IETF RFC Observer</h2>
+
+        <div>
+            <p>There are {{active_groups.len()}} active groups, and {{inactive_groups.len()}} inactive groups.</p>
+        </div>
+
+        <h2>Active groups</h2>
+
+        <div class="groups">
+            {% for group in active_groups %}
+            <div class="group">
+                <a href="/{{group.acronym}}">
+                    <div class="card">
+                        <span>{{group.acronym}} — {{group.name}}</span>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <h2>Inactive groups</h2>
+
+        <div class="groups">
+            {% for group in inactive_groups %}
+            <div class="group">
+                <a href="/{{group.acronym}}">
+                    <div class="card">
+                        <span>{{group.acronym}} — {{group.name}}</span>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+
+</html>

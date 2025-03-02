@@ -59,10 +59,10 @@
     </div>
 
     <div id="issue-lists">
-        <h2>Open issues</h2>
+        <h2>{% block open_heading %}Open issues{% endblock %}</h2>
         <ul id="open-issues"></ul>
 
-        <h2>Closed issues</h2>
+        <h2>{% block closed_heading %}Closed issues{% endblock %}</h2>
         <ul id="closed-issues"></ul>
     </div>
 
@@ -107,6 +107,16 @@
                         data: histogram.map(row => row.count)
                     }
                 ]
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Months'
+                        }
+                    }
+                }
             }
         });
 
@@ -133,7 +143,7 @@
 
         statusText.textContent = vars.fetchingStatus;
 
-        fetch("/api/data")
+        fetch(vars.dataUrl)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error(`HTTP error: ${response.status}`);

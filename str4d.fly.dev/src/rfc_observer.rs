@@ -4,6 +4,7 @@ use axum::{routing::get, Router};
 pub(crate) mod common;
 
 pub(crate) mod go;
+pub(crate) mod ietf;
 pub(crate) mod rust;
 
 pub(crate) fn build() -> Router {
