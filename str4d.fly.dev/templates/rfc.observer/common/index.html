@@ -23,6 +23,22 @@
             text-decoration: underline;
         }
 
+        #content {
+            background-color: #43424f;
+            color: #fbfbfe;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: medium;
+            padding: 20px;
+            margin: 20px;
+        }
+
+        @media screen and (max-width: 600px) {
+            #content {
+                padding: 10px;
+                margin: 10px;
+            }
+        }
+
         #iconheader {
             text-align: center;
             font-size: 128pt;
@@ -39,31 +55,33 @@
 </head>
 
 <body>
-    <div id="iconheader">{% block iconheader %}{% endblock %}</div>
-    <h2>{% block textheader %}{% endblock %}</h2>
+    <div id="content">
+        <div id="iconheader">{% block iconheader %}{% endblock %}</div>
+        <h2>{% block textheader %}{% endblock %}</h2>
 
-    <div id="status-box">
-        <p id="status-text"></p>
-    </div>
+        <div id="status-box">
+            <p id="status-text"></p>
+        </div>
 
-    <div>
-        <canvas id="aggregate"></canvas>
-    </div>
+        <div>
+            <canvas id="aggregate"></canvas>
+        </div>
 
-    <div id="stats-box">
-        <p id="stats-text"></p>
-    </div>
+        <div id="stats-box">
+            <p id="stats-text"></p>
+        </div>
 
-    <div>
-        <canvas id="histogram"></canvas>
-    </div>
+        <div>
+            <canvas id="histogram"></canvas>
+        </div>
 
-    <div id="issue-lists">
-        <h2>{% block open_heading %}Open issues{% endblock %}</h2>
-        <ul id="open-issues"></ul>
+        <div id="issue-lists">
+            <h2>{% block open_heading %}Open issues{% endblock %}</h2>
+            <ul id="open-issues"></ul>
 
-        <h2>{% block closed_heading %}Closed issues{% endblock %}</h2>
-        <ul id="closed-issues"></ul>
+            <h2>{% block closed_heading %}Closed issues{% endblock %}</h2>
+            <ul id="closed-issues"></ul>
+        </div>
     </div>
 
     <script>
@@ -71,6 +89,8 @@
     </script>
     {% block scriptvars %}{% endblock %}
     <script>
+        Chart.defaults.color = '#fbfbfe';
+
         const graphAgg = (aggregate) => new Chart(document.getElementById('aggregate'), {
             type: 'line',
             data: {
