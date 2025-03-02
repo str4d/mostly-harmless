@@ -47,7 +47,7 @@ pub(super) async fn get_paginated<T: DeserializeOwned>(
 }
 
 #[cached(
-    time = 600,
+    time = 86400,
     result = true,
     key = "String",
     convert = r#"{ String::from("IETF-Groups") }"#
@@ -84,7 +84,7 @@ pub(super) async fn get_groups(
 }
 
 #[cached(
-    time = 600,
+    time = 86400,
     result = true,
     key = "String",
     convert = r#"{ String::from(acronym) }"#
