@@ -13,6 +13,7 @@ pub(super) struct Document {
     title: String,
     pub(super) rfc: Option<u32>,
     pub(super) created_at: DateTime<Utc>,
+    pub(super) revisions: Vec<DateTime<Utc>>,
     pub(super) expires_at: Option<DateTime<Utc>>,
     pub(super) closed_at: Option<DateTime<Utc>>,
 }
@@ -23,13 +24,18 @@ impl Document {
         info: DocInfo,
         expires_at: Option<DateTime<Utc>>,
     ) -> Option<Self> {
+        let mut rev_history = info.rev_history;
+        let creation = rev_history.remove(0);
+        let closed_at = rfc.map(|_| rev_history.pop().unwrap().published);
+
         Some(Self {
             name: info.name,
             title: info.title,
             rfc,
-            created_at: info.rev_history.first().unwrap().published,
+            created_at: creation.published,
+            revisions: rev_history.into_iter().map(|rev| rev.published).collect(),
             expires_at,
-            closed_at: rfc.map(|_| info.rev_history.last().unwrap().published),
+            closed_at,
         })
     }
 }
@@ -72,6 +78,12 @@ impl Data {
 
         for doc in &documents {
             day(&mut deltas, &doc.created_at).drafted += 1;
+
+            // Mark each revision as a day without changes, so the transition from last
+            // draft to published RFC renders correctly.
+            for at in &doc.revisions {
+                let _ = day(&mut deltas, &at);
+            }
 
             match (doc.expires_at, doc.closed_at) {
                 (Some(at), _) if at <= now => {
