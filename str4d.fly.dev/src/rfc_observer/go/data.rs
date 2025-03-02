@@ -4,8 +4,9 @@ use chrono::{DateTime, NaiveDate, Utc};
 use serde::Serialize;
 
 use crate::rfc_observer::common::{
+    completion_months_histogram,
     issues_with_labels_query::IssuesWithLabelsQueryRepositoryIssuesEdgesNode, label_events_for,
-    LabelEvent,
+    Bucket, HistogramStats, LabelEvent,
 };
 
 #[derive(Clone, Debug, Serialize)]
@@ -65,6 +66,8 @@ pub(super) struct Aggregate {
 #[derive(Clone, Serialize)]
 pub(super) struct Data {
     pub(super) agg: Vec<Aggregate>,
+    pub(super) completed_hist: Vec<Bucket>,
+    pub(super) completed_stats: HistogramStats,
     pub(super) open: Vec<Proposal>,
     pub(super) closed: Vec<Proposal>,
 }
@@ -233,6 +236,17 @@ impl Data {
         closed.sort_by_cached_key(|proposal| proposal.closed_at.unwrap() - proposal.created_at);
         closed.reverse();
 
-        Self { agg, open, closed }
+        // Prepare a histogram of "number of proposals completed within X months".
+        let (completed_hist, completed_stats) = completion_months_histogram(&closed, |proposal| {
+            (&proposal.created_at, &proposal.closed_at.as_ref().unwrap())
+        });
+
+        Self {
+            agg,
+            completed_hist,
+            completed_stats,
+            open,
+            closed,
+        }
     }
 }

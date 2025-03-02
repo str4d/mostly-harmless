@@ -7,8 +7,9 @@ use serde::Serialize;
 use tracing::debug;
 
 use crate::rfc_observer::common::{
+    completion_months_histogram,
     issues_with_labels_and_body_query::IssuesWithLabelsAndBodyQueryRepositoryIssuesEdgesNode,
-    label_events_for_bodied, LabelEvent,
+    label_events_for_bodied, Bucket, HistogramStats, LabelEvent,
 };
 
 /// Issues that get detected as RFC tracking issues, but that should be ignored (because
@@ -134,6 +135,8 @@ pub(super) struct Aggregate {
 #[derive(Clone, Serialize)]
 pub(super) struct Data {
     pub(super) agg: Vec<Aggregate>,
+    pub(super) completed_hist: Vec<Bucket>,
+    pub(super) completed_stats: HistogramStats,
     pub(super) open: Vec<TrackingIssue>,
     pub(super) closed: Vec<TrackingIssue>,
 }
@@ -289,6 +292,17 @@ impl Data {
         closed.sort_by_cached_key(|issue| issue.closed_at.unwrap() - issue.created_at);
         closed.reverse();
 
-        Self { agg, open, closed }
+        // Prepare a histogram of "number of RFCs completed within X months".
+        let (completed_hist, completed_stats) = completion_months_histogram(&closed, |issue| {
+            (&issue.created_at, &issue.closed_at.as_ref().unwrap())
+        });
+
+        Self {
+            agg,
+            completed_hist,
+            completed_stats,
+            open,
+            closed,
+        }
     }
 }

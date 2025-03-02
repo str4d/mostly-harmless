@@ -50,6 +50,14 @@
         <canvas id="aggregate"></canvas>
     </div>
 
+    <div id="stats-box">
+        <p id="stats-text"></p>
+    </div>
+
+    <div>
+        <canvas id="histogram"></canvas>
+    </div>
+
     <div id="issue-lists">
         <h2>Open issues</h2>
         <ul id="open-issues"></ul>
@@ -89,6 +97,19 @@
             }
         });
 
+        const graphHist = (histogram) => new Chart(document.getElementById('histogram'), {
+            type: 'bar',
+            data: {
+                labels: histogram.map(row => row.label),
+                datasets: [
+                    {
+                        label: 'Count',
+                        data: histogram.map(row => row.count)
+                    }
+                ]
+            }
+        });
+
         function buildList(list, issues) {
             list.replaceChildren();
             issues.forEach(issue => {
@@ -108,6 +129,7 @@
         }
 
         const statusText = document.getElementById('status-text');
+        const statsText = document.getElementById('stats-text');
 
         statusText.textContent = vars.fetchingStatus;
 
@@ -121,7 +143,9 @@
             })
             .then((data) => {
                 statusText.textContent = vars.loadedStatus(data);
+                statsText.textContent = vars.loadedStats(data);
                 graphAgg(data.agg);
+                graphHist(data.completed_hist);
                 buildList(document.getElementById('open-issues'), data.open);
                 buildList(document.getElementById('closed-issues'), data.closed);
                 document.getElementById('issue-lists').style.display = 'unset';

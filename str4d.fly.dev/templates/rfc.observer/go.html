@@ -9,6 +9,7 @@
 <script>
     vars.fetchingStatus = "Fetching proposals...";
     vars.loadedStatus = (data) => `There are ${data.open.length + data.closed.length} proposals, of which ${data.open.length} are still open.`;
+    vars.loadedStats = (data) => `The median time-to-complete over all time is ${data.completed_stats.median} months.`;
     vars.datasets = (aggregate) => [
         {
             label: 'Created',
