@@ -9,6 +9,15 @@ use crate::rfc_observer::common::{
     Bucket, HistogramStats, LabelEvent,
 };
 
+/// Proposals that should be ignored (because e.g. they are a duplicate, or spam).
+const PROPOSALS_TO_IGNORE: &[i64] = &[
+    20453, 25273, 26300, 26699, 27370, 28467, 29818, 47480, 47988, 50059, 50252, 51136, 51979,
+    52220, 52749, 52898, 53129, 53149, 53150, 53547, 54379, 54548, 55836, 56093, 56761, 56831,
+    57010, 57409, 57539, 57561, 58964, 59019, 59123, 59596, 60471, 61815, 61945, 62630, 63571,
+    63591, 64629, 64671, 65342, 65875, 66286, 66341, 67147, 67669, 67848, 68354, 68529, 69372,
+    69433, 69844, 70066, 70902, 70946, 71276, 71472, 71627, 71707, 71755, 71980,
+];
+
 #[derive(Clone, Debug, Serialize)]
 pub(super) struct Proposal {
     pub(super) number: i64,
@@ -21,6 +30,10 @@ pub(super) struct Proposal {
 
 impl Proposal {
     pub(super) fn new(issue: IssuesWithLabelsQueryRepositoryIssuesEdgesNode) -> Option<Self> {
+        if PROPOSALS_TO_IGNORE.contains(&issue.number) {
+            return None;
+        }
+
         let label_events = label_events_for::<Label>(issue.timeline_items);
 
         Some(Proposal {
