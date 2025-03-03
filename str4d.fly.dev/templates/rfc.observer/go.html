@@ -33,13 +33,8 @@
             data: aggregate.map(row => row.closed)
         }
     ];
-    vars.renderIssue = (issue, a, age_in_days) => {
+    vars.renderIssue = (issue, a) => {
         a.href = `https://github.com/golang/go/issues/${issue.number}`;
-        if (issue.closed_at) {
-            a.innerHTML += `${age_in_days} days: `;
-        } else {
-            a.innerHTML += `${age_in_days} days old: `;
-        }
         a.innerHTML += `(Proposal ${issue.number}) ${issue.title}`;
     };
 </script>

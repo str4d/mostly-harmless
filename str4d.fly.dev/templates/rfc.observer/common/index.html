@@ -47,6 +47,25 @@
         #issue-lists {
             display: none;
         }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        thead {
+            border-block-end: 2px solid #bfbfbf;
+            background: #323642;
+        }
+
+        th,
+        td {
+            border: 1px solid #bfbfbf;
+            padding: 0.25rem 0.75rem;
+        }
+
+        td:not(:first-child) {
+            text-align: end;
+        }
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@^4"></script>
@@ -77,10 +96,26 @@
 
         <div id="issue-lists">
             <h2>{% block open_heading %}Open issues{% endblock %}</h2>
-            <ul id="open-issues"></ul>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Age (days)</th>
+                    </tr>
+                </thead>
+                <tbody id="open-issues"></tbody>
+            </table>
 
             <h2>{% block closed_heading %}Closed issues{% endblock %}</h2>
-            <ul id="closed-issues"></ul>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Age (days)</th>
+                    </tr>
+                </thead>
+                <tbody id="closed-issues"></tbody>
+            </table>
         </div>
     </div>
 
@@ -140,21 +175,28 @@
             }
         });
 
-        function buildList(list, issues) {
-            list.replaceChildren();
+        function buildTable(table, issues) {
+            table.replaceChildren();
             issues.forEach(issue => {
-                let li = document.createElement('li');
-                list.appendChild(li);
+                let tr = document.createElement('tr');
+                table.appendChild(tr);
+
+                let td_title = document.createElement('td');
+                let td_age = document.createElement('td');
+                tr.appendChild(td_title);
+                tr.appendChild(td_age);
+
                 let a = document.createElement('a');
-                li.appendChild(a);
+                td_title.appendChild(a);
                 a.target = "_blank";
 
                 let created = Date.parse(issue.created_at);
                 let end = issue.closed_at ? Date.parse(issue.closed_at) : Date.now();
                 let age = end - created;
                 let age_in_days = Math.round(age / (1000 * 3600 * 24));
+                td_age.innerHTML = `${age_in_days}`;
 
-                vars.renderIssue(issue, a, age_in_days);
+                vars.renderIssue(issue, a, tr);
             });
         }
 
@@ -176,8 +218,8 @@
                 statsText.textContent = vars.loadedStats(data);
                 graphAgg(data.agg);
                 graphHist(data.completed_hist);
-                buildList(document.getElementById('open-issues'), data.open);
-                buildList(document.getElementById('closed-issues'), data.closed);
+                buildTable(document.getElementById('open-issues'), data.open);
+                buildTable(document.getElementById('closed-issues'), data.closed);
                 document.getElementById('issue-lists').style.display = 'unset';
             })
             .catch((error) => {

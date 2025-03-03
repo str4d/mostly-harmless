@@ -28,13 +28,8 @@
             data: aggregate.map(row => row.closed)
         }
     ];
-    vars.renderIssue = (issue, a, age_in_days) => {
+    vars.renderIssue = (issue, a) => {
         a.href = `https://github.com/rust-lang/rust/issues/${issue.number}`;
-        if (issue.closed_at) {
-            a.innerHTML += `${age_in_days} days: `;
-        } else {
-            a.innerHTML += `${age_in_days} days old: `;
-        }
         a.innerHTML += `(RFC ${issue.rfc}) ${issue.title}`;
     };
 </script>

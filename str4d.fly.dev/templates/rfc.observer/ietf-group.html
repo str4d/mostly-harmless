@@ -26,15 +26,10 @@
             data: aggregate.map(row => row.published)
         }
     ];
-    vars.renderIssue = (doc, a, age_in_days) => {
+    vars.renderIssue = (doc, a) => {
         a.href = `https://datatracker.ietf.org/doc/${doc.name}/`;
-        if (doc.closed_at) {
-            a.innerHTML += `${age_in_days} days: `;
-        } else {
-            a.innerHTML += `${age_in_days} days old: `;
-        }
         if (doc.rfc) {
-            a.innerHTML += `(RFC ${doc.rfc}) `;
+            a.innerHTML += `RFC ${doc.rfc}: `;
         }
         a.innerHTML += `${doc.title}`;
     };
