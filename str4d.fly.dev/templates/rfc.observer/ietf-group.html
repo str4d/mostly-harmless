@@ -4,7 +4,9 @@
 {% block iconheader %}🌐🔍{% endblock %}
 {% block textheader %}{{group.name}}{% endblock %}
 {% block open_heading %}Open Internet-Drafts{% endblock %}
+{% block open_table_cols %}<th>Revisions</th>{% endblock %}
 {% block closed_heading %}Published RFCs{% endblock %}
+{% block closed_table_cols %}<th>Drafts</th>{% endblock %}
 
 {% block scriptvars %}
 <script>
@@ -26,10 +28,16 @@
             data: aggregate.map(row => row.published)
         }
     ];
-    vars.renderIssue = (doc, a) => {
+    vars.renderIssue = (doc, a, tr) => {
         a.href = `https://datatracker.ietf.org/doc/${doc.name}/`;
+        let td_revisions = document.createElement('td');
+        tr.appendChild(td_revisions);
         if (doc.rfc) {
+            // Count the first draft along with its revisions.
+            td_revisions.innerHTML = `${doc.revisions.length + 1}`;
             a.innerHTML += `RFC ${doc.rfc}: `;
+        } else {
+            td_revisions.innerHTML = `${doc.revisions.length}`;
         }
         a.innerHTML += `${doc.title}`;
     };

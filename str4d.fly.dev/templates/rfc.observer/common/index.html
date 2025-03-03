@@ -101,6 +101,7 @@
                     <tr>
                         <th>Title</th>
                         <th>Age (days)</th>
+                        {% block open_table_cols %}{% endblock %}
                     </tr>
                 </thead>
                 <tbody id="open-issues"></tbody>
@@ -112,6 +113,7 @@
                     <tr>
                         <th>Title</th>
                         <th>Age (days)</th>
+                        {% block closed_table_cols %}{% endblock %}
                     </tr>
                 </thead>
                 <tbody id="closed-issues"></tbody>
