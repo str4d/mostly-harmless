@@ -17,8 +17,8 @@ pub(crate) fn build() -> Router {
 
     Router::new()
         .route("/", get(index))
-        .route("/:acronym", get(group))
-        .route("/api/data/:acronym", get(data))
+        .route("/{acronym}", get(group))
+        .route("/api/data/{acronym}", get(data))
         .with_state(state)
 }
 

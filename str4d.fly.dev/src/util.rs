@@ -102,7 +102,7 @@ where
     /// Requests with host `<from>` will be redirected to `https://<to><path_and_query>`.
     fn redirect_inner<F>(self, from: &'static str, to: &'static str, redirect: F) -> Self
     where
-        F: FnOnce(&str) -> Redirect,
+        F: FnOnce(&str) -> Redirect + Sync,
         F: Clone + Send + 'static,
     {
         self.handle(
@@ -127,8 +127,8 @@ where
     /// `layer` is called will not have the middleware added.
     pub(crate) fn layer<L>(self, layer: L) -> Multiplexer<S>
     where
-        L: Layer<Route> + Clone + Send + 'static,
-        L::Service: Service<Request> + Clone + Send + 'static,
+        L: Layer<Route> + Clone + Send + Sync + 'static,
+        L::Service: Service<Request> + Clone + Send + Sync + 'static,
         <L::Service as Service<Request>>::Response: IntoResponse + 'static,
         <L::Service as Service<Request>>::Error: Into<Infallible> + 'static,
         <L::Service as Service<Request>>::Future: Send + 'static,
