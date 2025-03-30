@@ -7,7 +7,7 @@ use atrium_api::{
     types::{BlobRef, TryFromUnknown, TypedBlobRef, Union},
 };
 use atrium_xrpc_client::reqwest::ReqwestClientBuilder;
-use axum::{routing::get, Router};
+use axum::{Router, routing::get};
 use cached::proc_macro::cached;
 
 pub(crate) fn build() -> Router {

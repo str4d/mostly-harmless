@@ -6,7 +6,7 @@ use axum::http::HeaderValue;
 use cached::proc_macro::cached;
 use chrono::{DateTime, Utc};
 use hyper::header::ACCEPT;
-use serde::{de::DeserializeOwned, Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, de::DeserializeOwned};
 
 pub(super) fn build_client() -> Result<reqwest::Client, Error> {
     Ok(reqwest::Client::builder()

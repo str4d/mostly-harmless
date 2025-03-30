@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use askama::Template;
 use askama_web::WebTemplate;
-use axum::{extract::Query, response::Redirect, routing::get, Router};
+use axum::{Router, extract::Query, response::Redirect, routing::get};
 
 use crate::util::get_temp_redir;
 

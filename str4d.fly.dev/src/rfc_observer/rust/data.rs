@@ -7,9 +7,9 @@ use serde::Serialize;
 use tracing::debug;
 
 use crate::rfc_observer::common::{
-    completion_months_histogram,
+    Bucket, HistogramStats, LabelEvent, completion_months_histogram,
     issues_with_labels_and_body_query::IssuesWithLabelsAndBodyQueryRepositoryIssuesEdgesNode,
-    label_events_for_bodied, Bucket, HistogramStats, LabelEvent,
+    label_events_for_bodied,
 };
 
 /// Issues that get detected as RFC tracking issues, but that should be ignored (because

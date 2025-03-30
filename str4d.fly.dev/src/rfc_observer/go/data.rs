@@ -4,9 +4,8 @@ use chrono::{DateTime, NaiveDate, Utc};
 use serde::Serialize;
 
 use crate::rfc_observer::common::{
-    completion_months_histogram,
+    Bucket, HistogramStats, LabelEvent, completion_months_histogram,
     issues_with_labels_query::IssuesWithLabelsQueryRepositoryIssuesEdgesNode, label_events_for,
-    Bucket, HistogramStats, LabelEvent,
 };
 
 /// Proposals that should be ignored (because e.g. they are a duplicate, or spam).

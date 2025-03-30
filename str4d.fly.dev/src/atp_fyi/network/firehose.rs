@@ -33,10 +33,9 @@ pub(crate) async fn monitor() -> anyhow::Result<()> {
 /// Returns the average firehose rates per minute, and the duration over which the average
 /// is taken.
 pub(crate) async fn average_rates_per_min() -> Option<(FirehoseRate, time::Duration)> {
-    if let Some(tracker) = TRACKER.get() {
-        Some(tracker.read().await.average_per_min())
-    } else {
-        None
+    match TRACKER.get() {
+        Some(tracker) => Some(tracker.read().await.average_per_min()),
+        _ => None,
     }
 }
 

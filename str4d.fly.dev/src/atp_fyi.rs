@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use askama::Template;
 use askama_web::WebTemplate;
-use axum::{routing::get, Router};
+use axum::{Router, routing::get};
 use cached::proc_macro::cached;
 
 mod github;

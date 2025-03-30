@@ -8,12 +8,12 @@ use std::{
 };
 
 use axum::{
+    Router,
     extract::Request,
     response::{IntoResponse, Redirect, Response},
-    routing::{future::RouteFuture, get, MethodRouter, Route},
-    Router,
+    routing::{MethodRouter, Route, future::RouteFuture, get},
 };
-use hyper::{header::HOST, StatusCode};
+use hyper::{StatusCode, header::HOST};
 use tower::{Layer, Service};
 
 pub(crate) mod github;

@@ -1,7 +1,7 @@
 use std::{env, fmt, iter};
 
 use graphql_client::{GraphQLQuery, Response};
-use reqwest::header::{HeaderValue, AUTHORIZATION};
+use reqwest::header::{AUTHORIZATION, HeaderValue};
 use tracing::debug;
 
 const API_URL: &str = "https://api.github.com/graphql";
@@ -51,12 +51,9 @@ pub struct GraphQlResponse<Q: GraphQLQuery> {
 
 impl<Q: GraphQLQuery> GraphQlResponse<Q> {
     pub fn into_data(self) -> Result<Q::ResponseData, Vec<graphql_client::Error>> {
-        Ok(self.inner.data.ok_or_else(|| {
-            if let Some(errors) = self.inner.errors {
-                errors
-            } else {
-                vec![]
-            }
+        Ok(self.inner.data.ok_or_else(|| match self.inner.errors {
+            Some(errors) => errors,
+            _ => vec![],
         })?)
     }
 }

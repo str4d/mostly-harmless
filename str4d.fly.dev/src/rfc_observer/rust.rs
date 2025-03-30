@@ -1,6 +1,6 @@
 use askama::Template;
 use askama_web::WebTemplate;
-use axum::{routing::get, Json, Router};
+use axum::{Json, Router, routing::get};
 use cached::proc_macro::cached;
 
 mod data;

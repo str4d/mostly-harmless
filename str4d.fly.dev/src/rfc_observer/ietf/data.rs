@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::Serialize;
 
-use crate::rfc_observer::common::{completion_months_histogram, Bucket, HistogramStats};
+use crate::rfc_observer::common::{Bucket, HistogramStats, completion_months_histogram};
 
 use super::datatracker::DocInfo;
 

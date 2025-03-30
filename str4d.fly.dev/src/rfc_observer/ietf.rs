@@ -3,9 +3,9 @@ use std::sync::Arc;
 use askama::Template;
 use askama_web::WebTemplate;
 use axum::{
+    Json, Router,
     extract::{Path, State},
     routing::get,
-    Json, Router,
 };
 use hyper::StatusCode;
 

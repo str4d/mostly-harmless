@@ -2,7 +2,7 @@
 name = "str4d-fly-dev"
 version = "0.1.0"
 authors = ["Jack Grigg <thestr4d@gmail.com>"]
-edition = "2021"
+edition = "2024"
 publish = false
 
 [dependencies]

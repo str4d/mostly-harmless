@@ -1,6 +1,6 @@
 use askama::Template;
 use askama_web::WebTemplate;
-use axum::{routing::get, Router};
+use axum::{Router, routing::get};
 
 pub(crate) fn build() -> Router {
     Router::new().route("/", get(index))

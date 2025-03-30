@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::Context;
 use askama::Template;
 use askama_web::WebTemplate;
-use axum::{routing::get, Router};
+use axum::{Router, routing::get};
 use cached::proc_macro::cached;
 use serde::Deserialize;
 

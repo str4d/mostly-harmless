@@ -1,7 +1,7 @@
 use std::fmt;
 
 use crate::{
-    rfc_observer::common::{issues_with_labels_query, IssuesWithLabelsQuery},
+    rfc_observer::common::{IssuesWithLabelsQuery, issues_with_labels_query},
     util::github,
 };
 
