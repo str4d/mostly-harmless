@@ -1,4 +1,5 @@
 use std::env;
+use std::fmt;
 
 use graphql_client::GraphQLQuery;
 
@@ -177,8 +178,23 @@ impl Issue {
 pub(super) enum Error {
     GitHub(github::Error),
     GraphQL(Vec<graphql_client::Error>),
-    UnknownGraphQLError,
     Var(env::VarError),
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Error::GitHub(e) => write!(f, "GitHub error: {e}"),
+            Error::GraphQL(errors) => {
+                writeln!(f, "GraphQL errors: [")?;
+                for e in errors {
+                    writeln!(f, "{e},")?;
+                }
+                write!(f, "]")
+            }
+            Error::Var(e) => write!(f, "Environment variable error: {e}"),
+        }
+    }
 }
 
 impl From<github::Error> for Error {

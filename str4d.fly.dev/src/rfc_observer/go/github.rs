@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::{
     rfc_observer::common::{issues_with_labels_query, IssuesWithLabelsQuery},
     util::github,
@@ -44,6 +46,21 @@ pub(super) async fn get_proposals() -> Result<Vec<Proposal>, Error> {
 pub(super) enum Error {
     GitHub(github::Error),
     GraphQl(Vec<graphql_client::Error>),
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Error::GitHub(e) => write!(f, "GitHub error: {e}"),
+            Error::GraphQl(errors) => {
+                writeln!(f, "GraphQL errors: [")?;
+                for e in errors {
+                    writeln!(f, "{e},")?;
+                }
+                write!(f, "]")
+            }
+        }
+    }
 }
 
 impl From<github::Error> for Error {

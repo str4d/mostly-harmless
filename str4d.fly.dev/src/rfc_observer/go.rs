@@ -24,7 +24,7 @@ async fn data() -> Json<Option<data::Data>> {
     let data = match self::github::get_proposals().await {
         Ok(proposals) => Some(data::Data::new(proposals)),
         Err(e) => {
-            tracing::error!("Failed to get proposals: {:?}", e);
+            tracing::error!("Failed to get proposals: {}", e);
             None
         }
     };

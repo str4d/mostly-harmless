@@ -90,13 +90,6 @@ where
         self
     }
 
-    /// Adds a permanent (HTTP 308) redirect between two hosts.
-    ///
-    /// Requests with host `<from>` will be redirected to `https://<to><path_and_query>`.
-    pub(crate) fn redirect(self, from: &'static str, to: &'static str) -> Self {
-        self.redirect_inner(from, to, Redirect::permanent)
-    }
-
     /// Adds a temporary (HTTP 307) redirect between two hosts.
     ///
     /// Requests with host `<from>` will be redirected to `https://<to><path_and_query>`.

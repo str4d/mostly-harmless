@@ -36,7 +36,7 @@ async fn roadmap() -> Roadmap {
     let roadmap = match self::github::get_roadmap().await {
         Ok(roadmap) => Some(roadmap),
         Err(e) => {
-            tracing::error!("Failed to get roadmap: {:?}", e);
+            tracing::error!("Failed to get roadmap: {}", e);
             None
         }
     };
