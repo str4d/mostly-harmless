@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use askama::Template;
+use askama_web::WebTemplate;
 use axum::{extract::Query, response::Redirect, routing::get, Router};
 
 use crate::util::get_temp_redir;
@@ -17,7 +18,7 @@ pub(crate) fn build() -> Router {
         )
 }
 
-#[derive(Template)]
+#[derive(Template, WebTemplate)]
 #[template(path = "str4d.xyz/index.html")]
 struct Index {}
 

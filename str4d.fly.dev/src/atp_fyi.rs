@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use askama::Template;
+use askama_web::WebTemplate;
 use axum::{routing::get, Router};
 use cached::proc_macro::cached;
 
@@ -13,7 +14,7 @@ pub(crate) fn build() -> Router {
         .route("/roadmap", get(roadmap))
 }
 
-#[derive(Clone, Template)]
+#[derive(Clone, Template, WebTemplate)]
 #[template(path = "atp.fyi/index.html")]
 struct Index {
     rates: Option<(network::firehose::FirehoseRate, Duration)>,
@@ -25,7 +26,7 @@ async fn index() -> Index {
     }
 }
 
-#[derive(Clone, Template)]
+#[derive(Clone, Template, WebTemplate)]
 #[template(path = "atp.fyi/roadmap.html")]
 struct Roadmap {
     roadmap: Option<github::Roadmap>,
@@ -36,7 +37,7 @@ async fn roadmap() -> Roadmap {
     let roadmap = match self::github::get_roadmap().await {
         Ok(roadmap) => Some(roadmap),
         Err(e) => {
-            tracing::error!("Failed to get roadmap: {}", e);
+            tracing::error!("Failed to get roadmap: {:?}", e);
             None
         }
     };

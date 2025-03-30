@@ -1,4 +1,5 @@
 use askama::Template;
+use askama_web::WebTemplate;
 use atrium_api::{
     app::{self, bsky::feed::post::RecordEmbedRefs::AppBskyEmbedImagesMain},
     client::AtpServiceClient,
@@ -13,7 +14,7 @@ pub(crate) fn build() -> Router {
     Router::new().route("/", get(index))
 }
 
-#[derive(Clone, Template)]
+#[derive(Clone, Template, WebTemplate)]
 #[template(path = "siso.dev/index.html")]
 struct Index {
     feed: Vec<(String, Post)>,

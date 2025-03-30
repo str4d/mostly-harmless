@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use askama::Template;
+use askama_web::WebTemplate;
 use axum::{
     extract::{Path, State},
     routing::get,
@@ -21,7 +22,7 @@ pub(crate) fn build() -> Router {
         .with_state(state)
 }
 
-#[derive(Clone, Template)]
+#[derive(Clone, Template, WebTemplate)]
 #[template(path = "rfc.observer/ietf.html")]
 struct Index {
     active_groups: Vec<self::datatracker::Group>,
@@ -41,7 +42,7 @@ async fn index(State(client): State<Arc<reqwest::Client>>) -> Result<Index, Stat
         })
 }
 
-#[derive(Clone, Template)]
+#[derive(Clone, Template, WebTemplate)]
 #[template(path = "rfc.observer/ietf-group.html")]
 struct Group {
     group: self::datatracker::Group,

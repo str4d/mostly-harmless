@@ -2,30 +2,31 @@ use std::collections::HashMap;
 
 use anyhow::Context;
 use askama::Template;
-use askama_axum::{IntoResponse, Response};
+use askama_web::WebTemplate;
 use axum::{routing::get, Router};
 use cached::proc_macro::cached;
-use hyper::StatusCode;
 use serde::Deserialize;
 
 pub(crate) fn build() -> Router {
     Router::new().route("/", get(index))
 }
 
-#[derive(Template)]
+#[derive(Template, WebTemplate)]
 #[template(path = "cryptography.social/index.html")]
 struct Index {
     users: Vec<User>,
 }
 
-async fn index() -> Response {
-    match fetch_eprint_authors().await {
-        Ok(users) => Index { users }.into_response(),
+async fn index() -> Index {
+    let users = match fetch_eprint_authors().await {
+        Ok(users) => users,
         Err(e) => {
             tracing::error!("Failed to fetch ePrint authors: {e}");
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            vec![]
         }
-    }
+    };
+
+    Index { users }
 }
 
 #[derive(Clone)]

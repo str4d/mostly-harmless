@@ -1,4 +1,5 @@
 use askama::Template;
+use askama_web::WebTemplate;
 use axum::{routing::get, Json, Router};
 use cached::proc_macro::cached;
 
@@ -11,7 +12,7 @@ pub(crate) fn build() -> Router {
         .route("/api/data", get(data))
 }
 
-#[derive(Clone, Template)]
+#[derive(Clone, Template, WebTemplate)]
 #[template(path = "rfc.observer/rust.html")]
 struct Index {}
 

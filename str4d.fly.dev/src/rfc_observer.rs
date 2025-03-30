@@ -1,4 +1,5 @@
 use askama::Template;
+use askama_web::WebTemplate;
 use axum::{routing::get, Router};
 
 pub(crate) mod common;
@@ -11,7 +12,7 @@ pub(crate) fn build() -> Router {
     Router::new().route("/", get(index))
 }
 
-#[derive(Clone, Template)]
+#[derive(Clone, Template, WebTemplate)]
 #[template(path = "rfc.observer/index.html")]
 struct Index {}
 
