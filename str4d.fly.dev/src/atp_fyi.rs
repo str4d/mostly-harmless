@@ -47,7 +47,7 @@ async fn roadmap() -> Roadmap {
 mod filters {
     use std::time::Duration;
 
-    pub fn fmtduration(d: &Duration) -> ::askama::Result<String> {
+    pub fn fmtduration(d: &Duration, _: &dyn askama::Values) -> ::askama::Result<String> {
         let d = chrono::TimeDelta::from_std(*d).map_err(|e| askama::Error::Custom(Box::new(e)))?;
         let half_past = d.num_minutes() >= 30;
 
@@ -61,7 +61,7 @@ mod filters {
         }
     }
 
-    pub fn fmtf64(value: &f64) -> ::askama::Result<String> {
+    pub fn fmtf64(value: &f64, _: &dyn askama::Values) -> ::askama::Result<String> {
         if *value >= 100.0 {
             Ok(format!("{value:.0}"))
         } else {
