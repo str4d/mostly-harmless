@@ -37,7 +37,7 @@ serde = { version = "1", features = ["derive"] }
 
 # Metrics
 metrics = "0.24"
-metrics-exporter-prometheus = "0.16"
+metrics-exporter-prometheus = "0.17"
 
 # Data
 phf = { version = "0.11", features = ["macros"] }
