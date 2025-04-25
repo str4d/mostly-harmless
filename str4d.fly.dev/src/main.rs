@@ -19,7 +19,7 @@ mod str4d_xyz;
 
 #[tokio::main]
 async fn main() {
-    println!("Printing something + 1 as early as possible so fly.io sees it.");
+    println!("Printing something + 2 as early as possible so fly.io sees it.");
 
     // Filter traces based on the RUST_LOG env var, or, if it's not set,
     // default to show info-level details.
