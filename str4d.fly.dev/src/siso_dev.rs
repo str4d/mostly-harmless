@@ -51,8 +51,6 @@ async fn get_feed() -> anyhow::Result<Vec<(String, Post)>> {
                 limit: Some(10.try_into().expect("valid")),
                 repo: "siso.dev".parse().expect("valid"),
                 reverse: None,
-                rkey_end: None,
-                rkey_start: None,
             }
             .into(),
         )
