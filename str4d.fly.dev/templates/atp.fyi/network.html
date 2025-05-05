@@ -10,6 +10,7 @@
         display: flex;
         flex-flow: column;
     }
+
     #atproto-map {
         border: 1px solid lightgray;
         background: white;
@@ -92,7 +93,7 @@
         function setHoveredNode(node) {
             if (node) {
                 state.hoveredNode = node;
-                state.hoveredNodeGroup = graph.getNodeAttribute(node, "group")
+                state.hoveredNodeGroup = graph.getNodeAttribute(node, "group");
                 state.hoveredNeighbors = new Set(graph.neighbors(node));
             }
 
@@ -109,22 +110,46 @@
             });
         }
 
+        function toggleSelectedNode(node) {
+            if (state.selectedNode !== node) {
+                state.selectedNode = node;
+                state.selectedNodeGroup = graph.getNodeAttribute(node, "group");
+                state.selectedNeighbors = new Set(graph.neighbors(node));
+            } else {
+                state.selectedNode = undefined;
+                state.selectedNodeGroup = undefined;
+                state.selectedNeighbors = undefined;
+            }
+
+            // Refresh rendering
+            renderer.refresh({
+                // We don't touch the graph data so we can skip its reindexation
+                skipIndexation: true,
+            });
+        }
+
         // Bind graph interactions:
         renderer.on("enterNode", ({ node }) => {
             setHoveredNode(node);
+        });
+        renderer.on("clickNode", ({ node }) => {
+            toggleSelectedNode(node);
         });
         renderer.on("leaveNode", () => {
             setHoveredNode(undefined);
         });
 
         // Render nodes accordingly to the internal state:
-        // 1. If there is a hovered relay node, all non-neighbor nodes are greyed
+        // 1. If there is a selected or hovered relay node, all non-neighbor nodes are greyed
         renderer.setSetting("nodeReducer", (node, data) => {
             const res = { ...data };
 
-            if (state.hoveredNodeGroup === "relay") {
+            if (state.selectedNodeGroup === "relay") {
+                if (state.selectedNeighbors && !state.selectedNeighbors.has(node) && state.selectedNode !== node) {
+                    res.color = "#f6f6f6";
+                }
+            } else if (state.hoveredNodeGroup === "relay") {
                 if (state.hoveredNeighbors && !state.hoveredNeighbors.has(node) && state.hoveredNode !== node) {
-                    res.label = "";
                     res.color = "#f6f6f6";
                 }
             }
@@ -133,14 +158,22 @@
         });
 
         // Render edges accordingly to the internal state:
-        // 1. The edge is hidden if it is not connected to the hovered node.
+        // 1. The edge is hidden if it is not connected to the selected or hovered node.
         renderer.setSetting("edgeReducer", (edge, data) => {
             const res = { ...data };
 
-            if (
-                !graph.extremities(edge).every((n) => n === state.hoveredNode || graph.areNeighbors(n, state.hoveredNode))
-            ) {
-                res.hidden = true;
+            if (state.selectedNode) {
+                if (
+                    !graph.extremities(edge).every((n) => n === state.selectedNode || graph.areNeighbors(n, state.selectedNode))
+                ) {
+                    res.hidden = true;
+                }
+            } else {
+                if (
+                    !graph.extremities(edge).every((n) => n === state.hoveredNode || graph.areNeighbors(n, state.hoveredNode))
+                ) {
+                    res.hidden = true;
+                }
             }
 
             return res;
