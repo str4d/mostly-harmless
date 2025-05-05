@@ -14,11 +14,12 @@ mod pds;
 pub(super) async fn enumerate(client: &reqwest::Client) -> Result<Network, Error> {
     // Hard-coded list of known relays (they aren't discoverable).
     let relays = vec![
-        Relay::new("Bluesky Relay East", "relay1.us-east.bsky.network"),
-        Relay::new("Bluesky Relay West", "relay1.us-west.bsky.network"),
-        Relay::new("Blacksky Relay", "atproto.africa"),
-        Relay::new("Cerulea Relay", "relay.cerulea.blue"),
-        Relay::new("Firehose Cam", "relay.fire.hose.cam"),
+        Relay::new("Bluesky Relay US East", "US", "relay1.us-east.bsky.network"),
+        Relay::new("Bluesky Relay US West", "US", "relay1.us-west.bsky.network"),
+        Relay::new("Blacksky Relay US", "US", "atproto.africa"),
+        Relay::new("Cerulea Relay EU", "EU", "relay.cerulea.blue"),
+        Relay::new("Firehose Cam CA", "CA", "relay.fire.hose.cam"),
+        Relay::new("Firehose Cam EU", "EU", "relay3.fr.hose.cam"),
     ];
 
     let bsky = sign_in(client).await?;
@@ -88,12 +89,13 @@ pub(super) struct Network {
 #[derive(Debug)]
 pub(super) struct Relay {
     pub(super) name: &'static str,
+    pub(super) region: &'static str,
     pub(super) host: &'static str,
 }
 
 impl Relay {
-    fn new(name: &'static str, host: &'static str) -> Self {
-        Self { name, host }
+    fn new(name: &'static str, region: &'static str, host: &'static str) -> Self {
+        Self { name, region, host }
     }
 }
 

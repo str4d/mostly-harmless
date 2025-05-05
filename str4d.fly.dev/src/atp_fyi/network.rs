@@ -73,6 +73,7 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
         .map(|(hostname, pds)| {
             (
                 add_node(node_builder.pds(hostname.clone(), pds.account_count)),
+                pds.account_count,
                 pds.relays,
             )
         })
@@ -83,15 +84,26 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
         .relays
         .into_iter()
         .enumerate()
-        // TODO: Rates will differ based on what PDSs a relay is subscribed to.
         .map(|(relay_index, relay)| {
+            let accounts = pds_nodes
+                .iter()
+                .filter_map(|(_, account_count, relays)| {
+                    relays.contains(&relay_index).then_some(*account_count)
+                })
+                .sum::<usize>();
             (
                 relay_index,
-                add_node(node_builder.relay(relay.name.to_string(), rates.ops_total)),
+                add_node(node_builder.relay(
+                    relay.region.to_string(),
+                    relay.name.to_string(),
+                    // Approximate relay rate by how many accounts it is receiving events from.
+                    rates.ops_total * (accounts as f64) / (node_builder.total_pds_accounts as f64),
+                )),
             )
         })
         .collect::<BTreeMap<_, _>>();
     let bsky_relays = [0, 1].map(|relay_index| *relay_nodes.get(&relay_index).expect("present"));
+    let blacksky_relay = *relay_nodes.get(&2).expect("present");
 
     // Add all detected labelers.
     for (name, likes) in network.labelers {
@@ -128,7 +140,7 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
     let mut edges = vec![];
 
     // Add edges from every PDS to the relays they are connected to.
-    for (pds, relays) in pds_nodes {
+    for (pds, _, relays) in pds_nodes {
         edges.extend(relays.into_iter().map(|relay_index| {
             edge_builder.pds_to_relay(pds, *relay_nodes.get(&relay_index).expect("present"))
         }));
@@ -143,13 +155,20 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
             .filter(|(_, n)| matches!(n.group, Group::Feed | Group::Labeler))
             .flat_map(|(node, n)| {
                 if matches!(n.group, Group::Labeler) {
-                    bsky_relays
-                        .map(|relay| edge_builder.relay_to_labeler(relay, node, rates.ops_total))
+                    bsky_relays.map(|relay| {
+                        Some(edge_builder.relay_to_labeler(relay, node, rates.ops_total))
+                    })
+                } else if n.label == "Blacksky" {
+                    [
+                        Some(edge_builder.relay_to_feed(blacksky_relay, node, rates.ops_total)),
+                        None,
+                    ]
                 } else {
                     bsky_relays
-                        .map(|relay| edge_builder.relay_to_feed(relay, node, rates.ops_total))
+                        .map(|relay| Some(edge_builder.relay_to_feed(relay, node, rates.ops_total)))
                 }
-            }),
+            })
+            .flatten(),
     );
 
     // Add edges from every labeler to the appviews that hydrate from them.
@@ -192,6 +211,7 @@ struct NodeBuilder {
     labeler_scale: (f64, f64),
     feed_scale: (f64, f64),
     app_view_scale: (f64, f64),
+    total_pds_accounts: usize,
 }
 
 impl NodeBuilder {
@@ -233,10 +253,11 @@ impl NodeBuilder {
             labeler_scale: lin_to_log(1.0, max_labeler_likes as f64),
             feed_scale: lin_to_log(min_feed_likes as f64, max_feed_likes as f64),
             app_view_scale: lin_to_log(1.0, max_relay_rate as f64),
+            total_pds_accounts: total_pds_users,
         }
     }
 
-    fn make_node(&self, group: Group, label: String, value: f64) -> Node {
+    fn make_node(&self, group: Group, subgroup: String, label: String, value: f64) -> Node {
         // We want to scale the node area logarithmically by value. Sigma.js only has a
         // radius control, so we convert from area to radius afterwards.
 
@@ -252,6 +273,7 @@ impl NodeBuilder {
 
         Node {
             group,
+            subgroup,
             label,
             size: area.sqrt(),
         }
@@ -264,28 +286,29 @@ impl NodeBuilder {
             } else {
                 Group::Pds
             },
+            String::new(),
             label,
             users as f64,
         )
     }
 
-    fn relay(&self, label: String, ops_per_minute: f64) -> Node {
-        self.make_node(Group::Relay, label, ops_per_minute)
+    fn relay(&self, region: String, label: String, ops_per_minute: f64) -> Node {
+        self.make_node(Group::Relay, region, label, ops_per_minute)
     }
 
     fn labeler(&self, label: String, likes: usize) -> Node {
-        self.make_node(Group::Labeler, label, likes as f64)
+        self.make_node(Group::Labeler, String::new(), label, likes as f64)
     }
 
     fn feed(&self, label: String, likes: usize) -> Node {
-        self.make_node(Group::Feed, label, likes as f64)
+        self.make_node(Group::Feed, String::new(), label, likes as f64)
     }
 
     fn app_view(&self, label: String, ops_per_minute: f64) -> Node {
         // TODO: This will not stay as ops_per_minute, because that's more of an edge
         // metric, and for some kinds of AppViews (like White Wind) usage might be high
         // even if ops/min is low.
-        self.make_node(Group::AppView, label, ops_per_minute)
+        self.make_node(Group::AppView, String::new(), label, ops_per_minute)
     }
 }
 
@@ -355,6 +378,7 @@ pub(super) struct Map {
 #[derive(Clone, Serialize)]
 struct Node {
     group: Group,
+    subgroup: String,
     label: String,
     size: f64,
 }

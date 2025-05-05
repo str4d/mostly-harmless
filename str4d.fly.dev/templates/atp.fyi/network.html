@@ -65,6 +65,7 @@
             graph.addNode(index, {
                 kind: kinds[node.group],
                 group: groups[node.group],
+                subgroup: node.subgroup,
                 label: node.label,
                 size: node.size,
                 color: colours[node.group],
@@ -78,7 +79,7 @@
         });
 
         graphologyLibrary.layout.circlepack.assign(graph, {
-            hierarchyAttributes: ["kind", "group"],
+            hierarchyAttributes: ["kind", "group", "subgroup"],
         });
 
         // Instantiate sigma.js and render the graph
