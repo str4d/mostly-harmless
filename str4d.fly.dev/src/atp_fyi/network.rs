@@ -22,30 +22,30 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
         .map(|(rates, _)| rates)
         // Use canned data if we're testing locally.
         .unwrap_or(firehose::FirehoseRate {
-            ops_total: 43021.0,
-            ops_5leafsync: 0.0,
-            ops_atfile: 0.0,
-            ops_bluebadge: 0.0,
-            ops_bluesky: 43021.0,
-            ops_bookmark: 0.0,
-            ops_cabildoabierto: 0.0,
-            ops_flashes: 0.0,
+            ops_total: 26386.0,
+            ops_5leafsync: 0.761,
+            ops_atfile: 0.001,
+            ops_bluebadge: 0.009,
+            ops_bluesky: 26382.0,
+            ops_bookmark: 0.001,
+            ops_cabildoabierto: 0.001,
+            ops_flashes: 1.108,
             ops_frontpage: 0.009,
-            ops_linkat: 0.0,
-            ops_picosky: 0.020,
-            ops_pinksky: 0.0,
-            ops_popsky: 0.0,
+            ops_linkat: 0.002,
+            ops_picosky: 0.001,
+            ops_pinksky: 0.032,
+            ops_popsky: 0.001,
             ops_protoscript: 0.0,
-            ops_rocksky: 0.0,
-            ops_roomy: 0.0,
-            ops_skyblur: 0.0,
-            ops_skyspace: 0.0,
-            ops_smokesignal: 0.010,
-            ops_sonasky: 0.0,
-            ops_statusphere: 0.0,
-            ops_streamplace: 0.0,
-            ops_tangled: 0.0,
-            ops_whitewind: 0.043,
+            ops_rocksky: 0.180,
+            ops_roomy: 0.001,
+            ops_skyblur: 0.111,
+            ops_skyspace: 0.028,
+            ops_smokesignal: 0.004,
+            ops_sonasky: 0.013,
+            ops_statusphere: 0.014,
+            ops_streamplace: 0.037,
+            ops_tangled: 0.062,
+            ops_whitewind: 0.527,
         });
 
     let node_builder = NodeBuilder::new(&rates, &network);
@@ -106,11 +106,22 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
     // Add the known appviews.
     // Hard-coded for now.
     let appview_bsky = add_node(node_builder.app_view("Bluesky".into(), rates.ops_bluesky));
+    let appview_flashes = add_node(node_builder.app_view("Flashes".into(), rates.ops_flashes));
     let appview_frontpage =
         add_node(node_builder.app_view("Frontpage".into(), rates.ops_frontpage));
+    let appview_linkat = add_node(node_builder.app_view("Linkat".into(), rates.ops_linkat));
     let appview_picosky = add_node(node_builder.app_view("Picosky".into(), rates.ops_picosky));
+    let appview_pinksky = add_node(node_builder.app_view("Pinksky".into(), rates.ops_pinksky));
+    let appview_popsky = add_node(node_builder.app_view("Popsky".into(), rates.ops_popsky));
+    let appview_rocksky = add_node(node_builder.app_view("Rocksky".into(), rates.ops_rocksky));
+    let appview_roomy = add_node(node_builder.app_view("Roomy".into(), rates.ops_roomy));
+    let appview_skyspace = add_node(node_builder.app_view("SkySpace".into(), rates.ops_skyspace));
     let appview_smokesignal =
         add_node(node_builder.app_view("Smoke Signal".into(), rates.ops_smokesignal));
+    let appview_sonasky = add_node(node_builder.app_view("SonaSky".into(), rates.ops_sonasky));
+    let appview_streamplace =
+        add_node(node_builder.app_view("Streamplace".into(), rates.ops_streamplace));
+    let appview_tangled = add_node(node_builder.app_view("Tangled".into(), rates.ops_tangled));
     let appview_whitewind =
         add_node(node_builder.app_view("White Wind".into(), rates.ops_whitewind));
 
@@ -155,9 +166,19 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
     edges.extend(bsky_relays.into_iter().flat_map(|relay| {
         [
             edge_builder.relay_to_app_view(relay, appview_bsky, rates.ops_bluesky),
+            edge_builder.relay_to_app_view(relay, appview_flashes, rates.ops_flashes),
             edge_builder.relay_to_app_view(relay, appview_frontpage, rates.ops_frontpage),
+            edge_builder.relay_to_app_view(relay, appview_linkat, rates.ops_linkat),
             edge_builder.relay_to_app_view(relay, appview_picosky, rates.ops_picosky),
+            edge_builder.relay_to_app_view(relay, appview_pinksky, rates.ops_pinksky),
+            edge_builder.relay_to_app_view(relay, appview_popsky, rates.ops_popsky),
+            edge_builder.relay_to_app_view(relay, appview_rocksky, rates.ops_rocksky),
+            edge_builder.relay_to_app_view(relay, appview_roomy, rates.ops_roomy),
+            edge_builder.relay_to_app_view(relay, appview_skyspace, rates.ops_skyspace),
             edge_builder.relay_to_app_view(relay, appview_smokesignal, rates.ops_smokesignal),
+            edge_builder.relay_to_app_view(relay, appview_sonasky, rates.ops_sonasky),
+            edge_builder.relay_to_app_view(relay, appview_streamplace, rates.ops_streamplace),
+            edge_builder.relay_to_app_view(relay, appview_tangled, rates.ops_tangled),
             edge_builder.relay_to_app_view(relay, appview_whitewind, rates.ops_whitewind),
         ]
     }));
