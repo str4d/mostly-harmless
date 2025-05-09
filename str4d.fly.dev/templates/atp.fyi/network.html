@@ -84,8 +84,9 @@
         });
 
         // Instantiate sigma.js and render the graph
-        const renderer = new Sigma(graph, document.getElementById("atproto-map"));
-        renderer.setSetting("labelRenderedSizeThreshold", 1000000);
+        const renderer = new Sigma(graph, document.getElementById("atproto-map"), {
+            labelRenderedSizeThreshold: 1000000
+        });
 
         // Declare internal state:
         const state = {};
