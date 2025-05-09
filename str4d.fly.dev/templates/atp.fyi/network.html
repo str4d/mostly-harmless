@@ -16,6 +16,26 @@
         background: white;
         flex: 1 1 auto;
     }
+
+    #clustersLayer {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+    }
+
+    .clusterLabel {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        font-family: sans-serif;
+        font-variant: small-caps;
+        font-weight: 400;
+        font-size: 1.8rem;
+        text-shadow:
+            2px 2px 1px white,
+            -2px -2px 1px white,
+            -2px 2px 1px white,
+            2px -2px 1px white;
+    }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sigma.js/2.4.0/sigma.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/graphology/0.26.0/graphology.umd.min.js"></script>
@@ -43,12 +63,12 @@
         AppView: "output",
     };
     const groups = {
-        BskyPds: "pds",
-        Pds: "pds",
-        Relay: "relay",
-        Labeler: "labeler",
-        Feed: "feed",
-        AppView: "appview",
+        BskyPds: "PDSs",
+        Pds: "PDSs",
+        Relay: "Relays",
+        Labeler: "Labelers",
+        Feed: "Feeds",
+        AppView: "AppViews",
     };
     const colours = {
         BskyPds: "#1185fe",
@@ -79,14 +99,55 @@
             });
         });
 
+        // Initialise clusters from graph data
+        const groupClusters = {};
+        graph.forEachNode((_node, atts) => {
+            if (!groupClusters[atts.group]) {
+                groupClusters[atts.group] = {
+                    label: atts.group,
+                    color: atts.color,
+                    positions: []
+                };
+            }
+        });
+
+        // Position the graph nodes
         graphologyLibrary.layout.circlepack.assign(graph, {
             hierarchyAttributes: ["kind", "group", "subgroup"],
         });
 
+        // Calculate each cluster's nodes barycenter to use for the cluster's label position
+        graph.forEachNode((node, atts) => {
+            const cluster = groupClusters[atts.group];
+            cluster.positions.push({ x: atts.x, y: atts.y });
+        });
+        for (const group in groupClusters) {
+            const cluster = groupClusters[group];
+            cluster.x = cluster.positions.reduce((acc, p) => acc + p.x, 0) / cluster.positions.length;
+            cluster.y = cluster.positions.reduce((acc, p) => acc + p.y, 0) / cluster.positions.length;
+        }
+
         // Instantiate sigma.js and render the graph
-        const renderer = new Sigma(graph, document.getElementById("atproto-map"), {
+        const container = document.getElementById("atproto-map");
+        const renderer = new Sigma(graph, container, {
             labelRenderedSizeThreshold: 1000000
         });
+
+        // Create the clustersLabel layer
+        const clustersLayer = document.createElement("div");
+        clustersLayer.id = "clustersLayer";
+        let clusterLabelsDoms = "";
+        for (const group in groupClusters) {
+            // fFor each cluster create a div label
+            const cluster = groupClusters[group];
+            // Adapt the position to viewport coordinates
+            const viewportPos = renderer.graphToViewport(cluster);
+            clusterLabelsDoms += `<div id='${cluster.label}' class="clusterLabel" style="top:${viewportPos.y}px;left:${viewportPos.x}px;color:${cluster.color}">${cluster.label}</div>`;
+        }
+        clustersLayer.innerHTML = clusterLabelsDoms;
+
+        // Insert the layer underneath the hovers layer
+        container.insertBefore(clustersLayer, container.querySelector(".sigma-hovers"));
 
         // Declare internal state:
         const state = {};
@@ -178,6 +239,20 @@
             }
 
             return res;
+        });
+
+        // Cluster label positions need to be updated on each render
+        renderer.on("afterRender", () => {
+            for (const group in groupClusters) {
+                const cluster = groupClusters[group];
+                const clusterLabel = document.getElementById(cluster.label);
+                if (clusterLabel) {
+                    // Update position from the viewport
+                    const viewportPos = renderer.graphToViewport(cluster);
+                    clusterLabel.style.top = `${viewportPos.y}px`;
+                    clusterLabel.style.left = `${viewportPos.x}px`;
+                }
+            }
         });
     }
 
