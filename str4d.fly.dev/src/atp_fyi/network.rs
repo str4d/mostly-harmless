@@ -155,9 +155,20 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
             .filter(|(_, n)| matches!(n.group, Group::Feed | Group::Labeler))
             .flat_map(|(node, n)| {
                 if matches!(n.group, Group::Labeler) {
-                    bsky_relays.map(|relay| {
-                        Some(edge_builder.relay_to_labeler(relay, node, rates.ops_total))
-                    })
+                    if n.label == "Blacksky Moderation" {
+                        [
+                            Some(edge_builder.relay_to_labeler(
+                                blacksky_relay,
+                                node,
+                                rates.ops_total,
+                            )),
+                            None,
+                        ]
+                    } else {
+                        bsky_relays.map(|relay| {
+                            Some(edge_builder.relay_to_labeler(relay, node, rates.ops_total))
+                        })
+                    }
                 } else if n.label == "Blacksky" {
                     [
                         Some(edge_builder.relay_to_feed(blacksky_relay, node, rates.ops_total)),
