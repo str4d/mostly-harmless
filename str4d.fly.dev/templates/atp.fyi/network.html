@@ -206,11 +206,11 @@
         renderer.setSetting("nodeReducer", (node, data) => {
             const res = { ...data };
 
-            if (state.selectedNodeGroup === "relay") {
+            if (state.selectedNodeGroup === "Relays") {
                 if (state.selectedNeighbors && !state.selectedNeighbors.has(node) && state.selectedNode !== node) {
                     res.color = "#f6f6f6";
                 }
-            } else if (state.hoveredNodeGroup === "relay") {
+            } else if (state.hoveredNodeGroup === "Relays") {
                 if (state.hoveredNeighbors && !state.hoveredNeighbors.has(node) && state.hoveredNode !== node) {
                     res.color = "#f6f6f6";
                 }
