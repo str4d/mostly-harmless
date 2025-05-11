@@ -12,7 +12,7 @@ use super::Error;
 pub(super) async fn enumerate(
     client: &reqwest::Client,
     bsky: &AtpAgent<MemorySessionStore, ReqwestClient>,
-) -> Result<Vec<(String, usize)>, Error> {
+) -> Result<Vec<super::Labeler>, Error> {
     let response = client
         .get("https://blue.mackuba.eu/xrpc/blue.feeds.mod.getLabellers")
         .send()
@@ -53,19 +53,32 @@ pub(super) async fn enumerate(
                 _ => unreachable!(),
             })
             .filter_map(|labeler| {
-                // Ignore labelers that have no labels (and thus aren't affecting AppViews).
-                if labeler.policies.label_values.is_empty() {
+                let handle = labeler.creator.handle.to_string();
+                let bsky_operated = handle.ends_with(".bsky.app");
+
+                // Ignore labelers that have no labels (and thus aren't affecting AppViews)
+                // except for Bluesky-operated labelers (some of which only serve regional
+                // labels).
+                if labeler.policies.label_values.is_empty() && !bsky_operated {
                     None
                 } else {
+                    let name = labeler
+                        .data
+                        .creator
+                        .data
+                        .display_name
+                        .filter(|name| !name.trim().is_empty())
+                        .unwrap_or(handle.clone());
                     let likes = labeler.data.like_count.unwrap_or(0);
 
-                    // Ignore labelers that have no name or valid handle.
-                    match labeler.data.creator.data.display_name {
-                        Some(name) if !name.trim().is_empty() => Some((name, likes)),
-                        _ => match labeler.creator.handle.as_str() {
-                            "handle.invalid" => None,
-                            _ => Some((labeler.creator.handle.to_string(), likes)),
-                        },
+                    // Ignore labelers that have no valid handle.
+                    match handle.as_str() {
+                        "handle.invalid" => None,
+                        _ => Some(super::Labeler {
+                            name,
+                            likes,
+                            bsky_operated,
+                        }),
                     }
                 }
             });

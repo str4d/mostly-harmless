@@ -94,8 +94,7 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
             (
                 relay_index,
                 add_node(node_builder.relay(
-                    relay.region.to_string(),
-                    relay.name.to_string(),
+                    relay,
                     // Approximate relay rate by how many accounts it is receiving events from.
                     rates.ops_total * (accounts as f64) / (node_builder.total_pds_accounts as f64),
                 )),
@@ -106,13 +105,13 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
     let blacksky_relay = *relay_nodes.get(&2).expect("present");
 
     // Add all detected labelers.
-    for (name, likes) in network.labelers {
-        add_node(node_builder.labeler(name, likes));
+    for labeler in network.labelers {
+        add_node(node_builder.labeler(labeler));
     }
 
     // Add all detected feeds.
-    for (name, likes) in network.feeds {
-        add_node(node_builder.feed(name, likes));
+    for feed in network.feeds {
+        add_node(node_builder.feed(feed));
     }
 
     // Add the known appviews.
@@ -236,19 +235,19 @@ impl NodeBuilder {
         let max_labeler_likes = network
             .labelers
             .iter()
-            .map(|(_, likes)| *likes)
+            .map(|labeler| labeler.likes)
             .max()
             .unwrap_or(0);
         let min_feed_likes = network
             .feeds
             .iter()
-            .map(|(_, likes)| *likes)
+            .map(|feed| feed.likes)
             .min()
             .unwrap_or(1);
         let max_feed_likes = network
             .feeds
             .iter()
-            .map(|(_, likes)| *likes)
+            .map(|feed| feed.likes)
             .max()
             .unwrap_or(0);
 
@@ -268,12 +267,19 @@ impl NodeBuilder {
         }
     }
 
-    fn make_node(&self, group: Group, subgroup: String, label: String, value: f64) -> Node {
+    fn make_node(
+        &self,
+        group: Group,
+        subgroup: String,
+        label: String,
+        value: f64,
+        bsky_operated: bool,
+    ) -> Node {
         // We want to scale the node area logarithmically by value. Sigma.js only has a
         // radius control, so we convert from area to radius afterwards.
 
         let (a, b) = match group {
-            Group::BskyPds | Group::Pds => self.pds_scale,
+            Group::Pds => self.pds_scale,
             Group::Relay => self.relay_scale,
             Group::Labeler => self.labeler_scale,
             Group::Feed => self.feed_scale,
@@ -287,39 +293,63 @@ impl NodeBuilder {
             subgroup,
             label,
             size: area.sqrt(),
+            bsky_operated,
         }
     }
 
     fn pds(&self, label: String, users: usize) -> Node {
+        let bsky_operated = label.ends_with(".bsky.network");
         self.make_node(
-            if label.ends_with(".bsky.network") {
-                Group::BskyPds
-            } else {
-                Group::Pds
-            },
+            Group::Pds,
             String::new(),
             label,
             users as f64,
+            bsky_operated,
         )
     }
 
-    fn relay(&self, region: String, label: String, ops_per_minute: f64) -> Node {
-        self.make_node(Group::Relay, region, label, ops_per_minute)
+    fn relay(&self, relay: services::Relay, ops_per_minute: f64) -> Node {
+        self.make_node(
+            Group::Relay,
+            relay.region.to_string(),
+            relay.name.to_string(),
+            ops_per_minute,
+            relay.bsky_operated,
+        )
     }
 
-    fn labeler(&self, label: String, likes: usize) -> Node {
-        self.make_node(Group::Labeler, String::new(), label, likes as f64)
+    fn labeler(&self, labeler: services::Labeler) -> Node {
+        self.make_node(
+            Group::Labeler,
+            String::new(),
+            labeler.name,
+            labeler.likes as f64,
+            labeler.bsky_operated,
+        )
     }
 
-    fn feed(&self, label: String, likes: usize) -> Node {
-        self.make_node(Group::Feed, String::new(), label, likes as f64)
+    fn feed(&self, feed: services::Feed) -> Node {
+        self.make_node(
+            Group::Feed,
+            String::new(),
+            feed.name,
+            feed.likes as f64,
+            feed.bsky_operated,
+        )
     }
 
     fn app_view(&self, label: String, ops_per_minute: f64) -> Node {
+        let bsky_operated = label == "Bluesky";
         // TODO: This will not stay as ops_per_minute, because that's more of an edge
         // metric, and for some kinds of AppViews (like White Wind) usage might be high
         // even if ops/min is low.
-        self.make_node(Group::AppView, String::new(), label, ops_per_minute)
+        self.make_node(
+            Group::AppView,
+            String::new(),
+            label,
+            ops_per_minute,
+            bsky_operated,
+        )
     }
 }
 
@@ -392,11 +422,11 @@ struct Node {
     subgroup: String,
     label: String,
     size: f64,
+    bsky_operated: bool,
 }
 
 #[derive(Clone, Serialize)]
 enum Group {
-    BskyPds,
     Pds,
     Relay,
     Labeler,

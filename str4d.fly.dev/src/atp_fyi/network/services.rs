@@ -82,8 +82,8 @@ async fn sign_in(
 pub(super) struct Network {
     pub(super) relays: Vec<Relay>,
     pub(super) pdss: HashMap<String, Pds>,
-    pub(super) labelers: Vec<(String, usize)>,
-    pub(super) feeds: Vec<(String, usize)>,
+    pub(super) labelers: Vec<Labeler>,
+    pub(super) feeds: Vec<Feed>,
 }
 
 #[derive(Debug)]
@@ -91,11 +91,17 @@ pub(super) struct Relay {
     pub(super) name: &'static str,
     pub(super) region: &'static str,
     pub(super) host: &'static str,
+    pub(super) bsky_operated: bool,
 }
 
 impl Relay {
     fn new(name: &'static str, region: &'static str, host: &'static str) -> Self {
-        Self { name, region, host }
+        Self {
+            name,
+            region,
+            host,
+            bsky_operated: host.ends_with(".bsky.network"),
+        }
     }
 }
 
@@ -104,4 +110,18 @@ pub(super) struct Pds {
     pub(super) relays: HashSet<usize>,
     pub(super) account_count: usize,
     pub(super) status: String,
+}
+
+#[derive(Debug)]
+pub(super) struct Labeler {
+    pub(super) name: String,
+    pub(super) likes: usize,
+    pub(super) bsky_operated: bool,
+}
+
+#[derive(Debug)]
+pub(super) struct Feed {
+    pub(super) name: String,
+    pub(super) likes: usize,
+    pub(super) bsky_operated: bool,
 }

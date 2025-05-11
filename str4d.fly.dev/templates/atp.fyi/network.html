@@ -55,7 +55,6 @@
 
 <script type="text/javascript">
     const kinds = {
-        BskyPds: "input",
         Pds: "input",
         Relay: "middle",
         Labeler: "middle",
@@ -63,20 +62,26 @@
         AppView: "output",
     };
     const groups = {
-        BskyPds: "PDSs",
         Pds: "PDSs",
         Relay: "Relays",
         Labeler: "Labelers",
         Feed: "Feeds",
         AppView: "AppViews",
     };
+    const bskyColour = "#1185fe";
     const colours = {
-        BskyPds: "#1185fe",
         Pds: "blue",
         Relay: "orange",
         Labeler: "red",
         Feed: "grey",
         AppView: "green",
+    };
+    const clusterColours = {
+        PDSs: "Pds",
+        Relays: "Relay",
+        Labelers: "Labeler",
+        Feeds: "Feed",
+        AppViews: "AppView",
     };
 
     function graphMap(map) {
@@ -89,7 +94,7 @@
                 subgroup: node.subgroup,
                 label: node.label,
                 size: node.size,
-                color: colours[node.group],
+                color: node.bsky_operated ? bskyColour : colours[node.group],
             });
         });
         map.edges.forEach((edge) => {
@@ -105,7 +110,7 @@
             if (!groupClusters[atts.group]) {
                 groupClusters[atts.group] = {
                     label: atts.group,
-                    color: atts.color,
+                    color: colours[clusterColours[atts.group]],
                     positions: []
                 };
             }
@@ -269,7 +274,7 @@
             return response.json();
         })
         .then((map) => {
-            statusText.textContent = "";
+            statusText.textContent = "Node sizes are logarithmic (PDSs: accounts, relays: bandwidth, labelers and feeds: likes). Click on a node to toggle selection. Services operates by Bluesky PBC are in light blue. Feeds cluster is very incomplete (missing data source).";
             graphMap(map);
         })
         .catch((error) => {

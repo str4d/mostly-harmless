@@ -8,7 +8,7 @@ use super::Error;
 
 pub(super) async fn enumerate(
     bsky: &AtpAgent<MemorySessionStore, ReqwestClient>,
-) -> Result<Vec<(String, usize)>, Error> {
+) -> Result<Vec<super::Feed>, Error> {
     let mut feeds = vec![];
     let mut cursor = None;
 
@@ -28,13 +28,11 @@ pub(super) async fn enumerate(
             .await?;
         tracing::debug!("Loaded {} feeds", response.feeds.len());
 
-        feeds.extend(
-            response
-                .data
-                .feeds
-                .into_iter()
-                .map(|feed| (feed.data.display_name, feed.data.like_count.unwrap_or(0))),
-        );
+        feeds.extend(response.data.feeds.into_iter().map(|feed| super::Feed {
+            name: feed.data.display_name,
+            likes: feed.data.like_count.unwrap_or(0),
+            bsky_operated: feed.data.creator.handle.ends_with("bsky.app"),
+        }));
 
         cursor = response.data.cursor;
 
