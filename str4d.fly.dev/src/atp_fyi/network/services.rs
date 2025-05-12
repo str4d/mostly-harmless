@@ -17,7 +17,9 @@ pub(super) async fn enumerate(client: &reqwest::Client) -> Result<Network, Error
         Relay::new("Bluesky Relay US East", "US", "relay1.us-east.bsky.network"),
         Relay::new("Bluesky Relay US West", "US", "relay1.us-west.bsky.network"),
         Relay::new("Blacksky Relay US", "US", "atproto.africa"),
+        Relay::new("feeds.blue Relay EU", "EU", "relay.feeds.blue"),
         Relay::new("Cerulea Relay EU", "EU", "relay.cerulea.blue"),
+        Relay::new("Ducky Relay EU", "EU", "relay.zio.blue"),
         Relay::new("Firehose Cam CA", "CA", "relay.fire.hose.cam"),
         Relay::new("Firehose Cam EU", "EU", "relay3.fr.hose.cam"),
     ];
