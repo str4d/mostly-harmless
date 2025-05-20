@@ -23,6 +23,7 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
         // Use canned data if we're testing locally.
         .unwrap_or(firehose::FirehoseRate {
             ops_total: 26386.0,
+            ops_2048: 0.001,
             ops_5leafsync: 0.761,
             ops_atfile: 0.001,
             ops_bluebadge: 0.009,
@@ -31,6 +32,7 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
             ops_cabildoabierto: 0.001,
             ops_flashes: 1.108,
             ops_frontpage: 0.009,
+            ops_grain: 0.001,
             ops_linkat: 0.002,
             ops_picosky: 0.001,
             ops_pinksky: 0.032,
@@ -42,9 +44,11 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
             ops_skyspace: 0.028,
             ops_smokesignal: 0.004,
             ops_sonasky: 0.013,
+            ops_spark: 0.001,
             ops_statusphere: 0.014,
             ops_streamplace: 0.037,
             ops_tangled: 0.062,
+            ops_tealfm: 0.001,
             ops_whitewind: 0.527,
         });
 

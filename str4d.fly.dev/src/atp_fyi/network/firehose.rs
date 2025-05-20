@@ -44,6 +44,7 @@ macro_rules! record_metrics {
         $metric,
         $count,
         ("atproto_firehose_ops_total" => ops_total),
+        ("atproto_firehose_ops_2048" => ops_2048),
         ("atproto_firehose_ops_5leafsync" => ops_5leafsync),
         ("atproto_firehose_ops_atfile" => ops_atfile),
         ("atproto_firehose_ops_bluesky" => ops_bluesky),
@@ -52,6 +53,7 @@ macro_rules! record_metrics {
         ("atproto_firehose_ops_cabildoabierto" => ops_cabildoabierto),
         ("atproto_firehose_ops_flashes" => ops_flashes),
         ("atproto_firehose_ops_frontpage" => ops_frontpage),
+        ("atproto_firehose_ops_grain" => ops_grain),
         ("atproto_firehose_ops_linkat" => ops_linkat),
         ("atproto_firehose_ops_picosky" => ops_picosky),
         ("atproto_firehose_ops_pinksky" => ops_pinksky),
@@ -63,9 +65,11 @@ macro_rules! record_metrics {
         ("atproto_firehose_ops_skyspace" => ops_skyspace),
         ("atproto_firehose_ops_smokesignal" => ops_smokesignal),
         ("atproto_firehose_ops_sonasky" => ops_sonasky),
+        ("atproto_firehose_ops_spark" => ops_spark),
         ("atproto_firehose_ops_statusphere" => ops_statusphere),
         ("atproto_firehose_ops_streamplace" => ops_streamplace),
         ("atproto_firehose_ops_tangled" => ops_tangled),
+        ("atproto_firehose_ops_tealfm" => ops_tealfm),
         ("atproto_firehose_ops_whitewind" => ops_whitewind)
     ));
     ($metrics:expr, $metric:expr, $count:expr, $(($known_metric:literal => $name:ident)),+) => {
@@ -83,6 +87,7 @@ macro_rules! delta {
         $current,
         $last,
         ops_total,
+        ops_2048,
         ops_5leafsync,
         ops_atfile,
         ops_bluesky,
@@ -91,6 +96,7 @@ macro_rules! delta {
         ops_cabildoabierto,
         ops_flashes,
         ops_frontpage,
+        ops_grain,
         ops_linkat,
         ops_picosky,
         ops_pinksky,
@@ -102,9 +108,11 @@ macro_rules! delta {
         ops_skyspace,
         ops_smokesignal,
         ops_sonasky,
+        ops_spark,
         ops_statusphere,
         ops_streamplace,
         ops_tangled,
+        ops_tealfm,
         ops_whitewind
     ));
     ($current:expr, $last:expr, $($name:ident),+) => {
@@ -121,6 +129,7 @@ macro_rules! accumulate {
         $acc,
         $item,
         ops_total,
+        ops_2048,
         ops_5leafsync,
         ops_atfile,
         ops_bluesky,
@@ -129,6 +138,7 @@ macro_rules! accumulate {
         ops_cabildoabierto,
         ops_flashes,
         ops_frontpage,
+        ops_grain,
         ops_linkat,
         ops_picosky,
         ops_pinksky,
@@ -140,9 +150,11 @@ macro_rules! accumulate {
         ops_skyspace,
         ops_smokesignal,
         ops_sonasky,
+        ops_spark,
         ops_statusphere,
         ops_streamplace,
         ops_tangled,
+        ops_tealfm,
         ops_whitewind
     ));
     ($acc:expr, $item:expr, $($name:ident),+) => {
@@ -157,6 +169,7 @@ macro_rules! rate {
         $day_sum,
         $day_count,
         ops_total,
+        ops_2048,
         ops_5leafsync,
         ops_atfile,
         ops_bluesky,
@@ -165,6 +178,7 @@ macro_rules! rate {
         ops_cabildoabierto,
         ops_flashes,
         ops_frontpage,
+        ops_grain,
         ops_linkat,
         ops_picosky,
         ops_pinksky,
@@ -176,9 +190,11 @@ macro_rules! rate {
         ops_skyspace,
         ops_smokesignal,
         ops_sonasky,
+        ops_spark,
         ops_statusphere,
         ops_streamplace,
         ops_tangled,
+        ops_tealfm,
         ops_whitewind
     ));
     ($day_sum:expr, $day_count:expr, $($name:ident),+) => {
@@ -259,6 +275,7 @@ impl MetricsTracker {
 #[derive(Clone, Debug)]
 pub(crate) struct FirehoseRate {
     pub(crate) ops_total: f64,
+    pub(crate) ops_2048: f64,
     pub(crate) ops_5leafsync: f64,
     pub(crate) ops_atfile: f64,
     pub(crate) ops_bluesky: f64,
@@ -267,6 +284,7 @@ pub(crate) struct FirehoseRate {
     pub(crate) ops_cabildoabierto: f64,
     pub(crate) ops_flashes: f64,
     pub(crate) ops_frontpage: f64,
+    pub(crate) ops_grain: f64,
     pub(crate) ops_linkat: f64,
     pub(crate) ops_picosky: f64,
     pub(crate) ops_pinksky: f64,
@@ -278,15 +296,18 @@ pub(crate) struct FirehoseRate {
     pub(crate) ops_skyspace: f64,
     pub(crate) ops_smokesignal: f64,
     pub(crate) ops_sonasky: f64,
+    pub(crate) ops_spark: f64,
     pub(crate) ops_statusphere: f64,
     pub(crate) ops_streamplace: f64,
     pub(crate) ops_tangled: f64,
+    pub(crate) ops_tealfm: f64,
     pub(crate) ops_whitewind: f64,
 }
 
 #[derive(Clone, Copy, Debug, Default)]
 struct FirehoseCount {
     ops_total: u64,
+    ops_2048: u64,
     ops_5leafsync: u64,
     ops_atfile: u64,
     ops_bluesky: u64,
@@ -295,6 +316,7 @@ struct FirehoseCount {
     ops_cabildoabierto: u64,
     ops_flashes: u64,
     ops_frontpage: u64,
+    ops_grain: u64,
     ops_linkat: u64,
     ops_picosky: u64,
     ops_pinksky: u64,
@@ -306,9 +328,11 @@ struct FirehoseCount {
     ops_skyspace: u64,
     ops_smokesignal: u64,
     ops_sonasky: u64,
+    ops_spark: u64,
     ops_statusphere: u64,
     ops_streamplace: u64,
     ops_tangled: u64,
+    ops_tealfm: u64,
     ops_whitewind: u64,
 }
 
