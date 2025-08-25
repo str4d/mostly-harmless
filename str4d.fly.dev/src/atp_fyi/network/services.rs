@@ -19,9 +19,14 @@ pub(super) async fn enumerate(client: &reqwest::Client) -> Result<Network, Error
         Relay::new("Blacksky Relay US", "US", "atproto.africa"),
         Relay::new("feeds.blue Relay EU", "EU", "relay.feeds.blue"),
         Relay::new("Cerulea Relay EU", "EU", "relay.cerulea.blue"),
-        Relay::new("Ducky Relay EU", "EU", "relay.zio.blue"),
-        Relay::new("Firehose Cam CA", "CA", "relay.fire.hose.cam"),
-        Relay::new("Firehose Cam EU", "EU", "relay3.fr.hose.cam"),
+        // Relay::new("Ducky Relay EU", "EU", "relay.zio.blue"),
+        Relay::new("hayescmd.net Relay EU", "EU", "relay.hayescmd.net"),
+        Relay::new("microcosm Relay Montreal", "CA", "relay2.fire.hose.cam"),
+        Relay::new("microcosm Relay France", "EU", "relay3.fr.hose.cam"),
+        // Relay::new("pear.cat Relay US", "US", "relayh.pear.cat"),
+        // Relay::new("Spark Relay US", "US", "relay.sprk.so"),
+        Relay::new("syu.is Relay", "JP", "bgs.syu.is"),
+        Relay::new("bnewbold Demo Relay US", "US", "relay-ovh.demo.bsky.dev"),
     ];
 
     let bsky = sign_in(client).await?;
