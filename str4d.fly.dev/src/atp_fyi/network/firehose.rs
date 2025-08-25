@@ -304,6 +304,98 @@ pub(crate) struct FirehoseRate {
     pub(crate) ops_whitewind: f64,
 }
 
+impl FirehoseRate {
+    pub(crate) fn groups(&self) -> Vec<FirehoseGroup> {
+        let g = |title, uri, rate| FirehoseGroup {
+            info: GroupInfo { title, uri },
+            rate,
+            subgroups: &[],
+        };
+
+        let mut groups = vec![
+            g("2048 game", "https://2048.blue/", self.ops_2048),
+            g(
+                "ATFile",
+                "https://github.com/electricduck/atfile",
+                self.ops_atfile,
+            ),
+            g("Bluesky", "https://bsky.app/", self.ops_bluesky),
+            g("Blue Badge", "https://badge.blue/", self.ops_bluebadge),
+            FirehoseGroup {
+                info: GroupInfo {
+                    title: "Bookmarks",
+                    uri: "",
+                },
+                rate: self.ops_bookmark,
+                subgroups: &[
+                    GroupInfo {
+                        title: "Klearsky",
+                        uri: "https://github.com/mimonelu/klearsky",
+                    },
+                    GroupInfo {
+                        title: "Starrysky",
+                        uri: "https://starrysky-console.pages.dev/",
+                    },
+                ],
+            },
+            g(
+                "Cabildo Abierto",
+                "https://www.cabildoabierto.com.ar",
+                self.ops_cabildoabierto,
+            ),
+            g(
+                "Flashes",
+                "https://bsky.app/profile/flashes.blue",
+                self.ops_flashes,
+            ),
+            g("Frontpage", "https://frontpage.fyi/", self.ops_frontpage),
+            g("Grain", "https://grain.social/", self.ops_grain),
+            g("Linkat", "https://linkat.blue/", self.ops_linkat),
+            g("Picosky", "https://psky.social/", self.ops_picosky),
+            g("Pinksky", "https://pinksky.app/", self.ops_pinksky),
+            g("Popsky", "https://popsky.social/", self.ops_popsky),
+            g(
+                "ProtoScript",
+                "https://protoscript.atdev.pro/",
+                self.ops_protoscript,
+            ),
+            g("Rocksky", "https://rocksky.app/", self.ops_rocksky),
+            g("Roomy", "https://roomy.chat/", self.ops_roomy),
+            g("Skyblur", "https://skyblur.uk/", self.ops_skyblur),
+            g("SkySpace", "https://skyspace.me/", self.ops_skyspace),
+            g(
+                "Smoke Signal",
+                "https://smokesignal.events/",
+                self.ops_smokesignal,
+            ),
+            g("SonaSky", "https://sonasky.app/", self.ops_sonasky),
+            g("Spark", "https://sprk.so/", self.ops_spark),
+            g(
+                "Statusphere",
+                "https://atproto.com/guides/applications",
+                self.ops_statusphere,
+            ),
+            g("Streamplace", "https://stream.place/", self.ops_streamplace),
+            g("Tangled", "https://tangled.sh/", self.ops_tangled),
+            g("teal.fm", "https://teal.fm/", self.ops_tealfm),
+            g("WhiteWind", "https://whtwnd.com/", self.ops_whitewind),
+            g("Some kind of sync from Mastodon", "", self.ops_5leafsync),
+        ];
+
+        // Only show groups with observed records over the measurement interval.
+        groups.retain(|g| g.rate > 0.0);
+
+        // Sort from highest rate to lowest. This doesn't directly map to activity because
+        // different records have different intended usage patterns (and thus a single
+        // record being observed in one group could be equivalent to hundreds of records
+        // in another group), but it suffices for now.
+        groups.sort_by(|a, b| a.rate.total_cmp(&b.rate));
+        groups.reverse();
+
+        groups
+    }
+}
+
 #[derive(Clone, Copy, Debug, Default)]
 struct FirehoseCount {
     ops_total: u64,
@@ -365,4 +457,15 @@ impl FirehoseCount {
 
         Ok(data)
     }
+}
+
+pub(crate) struct FirehoseGroup {
+    pub(crate) info: GroupInfo,
+    pub(crate) rate: f64,
+    pub(crate) subgroups: &'static [GroupInfo],
+}
+
+pub(crate) struct GroupInfo {
+    pub(crate) title: &'static str,
+    pub(crate) uri: &'static str,
 }
