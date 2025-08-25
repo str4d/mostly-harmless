@@ -1,4 +1,4 @@
-FROM rust:bookworm as builder
+FROM rust:trixie as builder
 
 # Make a fake Rust app to keep a cached layer of compiled crates
 RUN USER=root cargo new app
@@ -22,7 +22,7 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
     cargo install --path .
 
 # Runtime image
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 # Install certificates so we can make outbound TLS connections
 RUN apt-get update \
