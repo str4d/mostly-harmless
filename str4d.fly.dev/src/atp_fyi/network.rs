@@ -341,12 +341,19 @@ impl NodeBuilder {
         }
     }
 
-    fn pds(&self, label: String, users: usize) -> Node {
-        let bsky_operated = label.ends_with(".bsky.network");
+    fn pds(&self, hostname: String, users: usize) -> Node {
+        let bsky_operated = hostname.ends_with(".bsky.network");
         self.make_node(
             Group::Pds,
             String::new(),
-            label,
+            format!(
+                "{hostname} ({})",
+                if users == 1 {
+                    "1 account".into()
+                } else {
+                    format!("{users} accounts")
+                }
+            ),
             users as f64,
             bsky_operated,
         )
