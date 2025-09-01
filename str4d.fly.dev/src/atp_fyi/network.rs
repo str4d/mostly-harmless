@@ -231,12 +231,36 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
     Ok(Map { nodes, edges })
 }
 
+struct NodeScale {
+    log_area_scale: f64,
+    log_floor_offset: f64,
+}
+
+impl NodeScale {
+    fn new(min_val: f64, max_val: f64) -> Self {
+        let log_area_scale = (NODE_MAX_AREA - NODE_MIN_AREA) / (max_val / min_val).log2();
+        let log_floor_offset = NODE_MIN_AREA - log_area_scale * min_val.log2();
+
+        Self {
+            log_area_scale,
+            log_floor_offset,
+        }
+    }
+
+    fn log_radius(&self, value: f64) -> f64 {
+        // We want to scale the node area by value. Sigma.js only has a radius control, so
+        // we convert from area to radius afterwards.
+        let area = self.log_floor_offset + self.log_area_scale * value.log2();
+        area.sqrt()
+    }
+}
+
 struct NodeBuilder {
-    pds_scale: (f64, f64),
-    relay_scale: (f64, f64),
-    labeler_scale: (f64, f64),
-    feed_scale: (f64, f64),
-    app_view_scale: (f64, f64),
+    pds_scale: NodeScale,
+    relay_scale: NodeScale,
+    labeler_scale: NodeScale,
+    feed_scale: NodeScale,
+    app_view_scale: NodeScale,
     total_pds_accounts: usize,
 }
 
@@ -267,18 +291,12 @@ impl NodeBuilder {
             .max()
             .unwrap_or(0);
 
-        let lin_to_log = |min_val: f64, max_val: f64| {
-            let b = (NODE_MAX_AREA - NODE_MIN_AREA) / (max_val / min_val).log2();
-            let a = NODE_MIN_AREA - b * min_val.log2();
-            (a, b)
-        };
-
         Self {
-            pds_scale: lin_to_log(1.0, total_pds_users as f64),
-            relay_scale: lin_to_log(0.01, max_relay_rate),
-            labeler_scale: lin_to_log(1.0, max_labeler_likes as f64),
-            feed_scale: lin_to_log(min_feed_likes as f64, max_feed_likes as f64),
-            app_view_scale: lin_to_log(1.0, max_relay_rate as f64),
+            pds_scale: NodeScale::new(1.0, total_pds_users as f64),
+            relay_scale: NodeScale::new(0.01, max_relay_rate),
+            labeler_scale: NodeScale::new(1.0, max_labeler_likes as f64),
+            feed_scale: NodeScale::new(min_feed_likes as f64, max_feed_likes as f64),
+            app_view_scale: NodeScale::new(1.0, max_relay_rate as f64),
             total_pds_accounts: total_pds_users,
         }
     }
@@ -291,24 +309,19 @@ impl NodeBuilder {
         value: f64,
         bsky_operated: bool,
     ) -> Node {
-        // We want to scale the node area logarithmically by value. Sigma.js only has a
-        // radius control, so we convert from area to radius afterwards.
-
-        let (a, b) = match group {
-            Group::Pds => self.pds_scale,
-            Group::Relay => self.relay_scale,
-            Group::Labeler => self.labeler_scale,
-            Group::Feed => self.feed_scale,
-            Group::AppView => self.app_view_scale,
+        let scale = match group {
+            Group::Pds => &self.pds_scale,
+            Group::Relay => &self.relay_scale,
+            Group::Labeler => &self.labeler_scale,
+            Group::Feed => &self.feed_scale,
+            Group::AppView => &self.app_view_scale,
         };
-
-        let area = a + b * value.log2();
 
         Node {
             group,
             subgroup,
             label,
-            size: area.sqrt(),
+            size: scale.log_radius(value),
             bsky_operated,
         }
     }
