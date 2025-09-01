@@ -285,13 +285,19 @@ impl NodeBuilder {
         // - All labels reach all AppViews.
         // - All users who have authored posts contribute to AppViews.
         let total_pds_users: usize = network.pdss.iter().map(|(_, pds)| pds.account_count).sum();
+        let largest_pds_users: usize = network
+            .pdss
+            .iter()
+            .map(|(_, pds)| pds.account_count)
+            .max()
+            .unwrap_or(total_pds_users);
         let max_relay_rate = rates.ops_total;
         let max_labeler_likes = network
             .labelers
             .iter()
             .map(|labeler| labeler.likes)
             .max()
-            .unwrap_or(0);
+            .unwrap_or(1);
         let min_feed_likes = network
             .feeds
             .iter()
@@ -303,10 +309,10 @@ impl NodeBuilder {
             .iter()
             .map(|feed| feed.likes)
             .max()
-            .unwrap_or(0);
+            .unwrap_or(1);
 
         Self {
-            pds_scale: NodeScale::new(1.0, 1.0, total_pds_users as f64),
+            pds_scale: NodeScale::new(1.0, 1.0, largest_pds_users as f64),
             relay_scale: NodeScale::new(0.01, 0.01, max_relay_rate),
             labeler_scale: NodeScale::new(1.0, 1.0, max_labeler_likes as f64),
             feed_scale: NodeScale::new(1.0, min_feed_likes as f64, max_feed_likes as f64),
