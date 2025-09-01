@@ -11,6 +11,24 @@
         flex-flow: column;
     }
 
+    #topbar {
+        display: flex;
+        flex-flow: row;
+    }
+
+    #toptext {
+        flex: 2 1 auto;
+    }
+
+    #controls {
+        flex: 1 1 auto;
+        text-align: end;
+    }
+
+    #controls .switch {
+        top: 3px;
+    }
+
     #atproto-map {
         border: 1px solid lightgray;
         background: white;
@@ -36,6 +54,65 @@
             -2px 2px 1px white,
             2px -2px 1px white;
     }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 30px;
+        height: 17px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 13px;
+        width: 13px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+
+    input:checked+.slider {
+        background-color: #2196F3;
+    }
+
+    input:focus+.slider {
+        box-shadow: 0 0 1px #2196F3;
+    }
+
+    input:checked+.slider:before {
+        -webkit-transform: translateX(13px);
+        -ms-transform: translateX(13px);
+        transform: translateX(13px);
+    }
+
+    .slider.round {
+        border-radius: 17px;
+    }
+
+    .slider.round:before {
+        border-radius: 50%;
+    }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sigma.js/2.4.0/sigma.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/graphology/0.26.0/graphology.umd.min.js"></script>
@@ -43,12 +120,60 @@
 {% endblock %}
 
 {% block content %}
-<div id="nav"><a href="/">🏠 Home</a></div>
+<div id="topbar">
+    <div id="toptext">
+        <div id="nav"><a href="/">🏠 Home</a></div>
 
-<h1>Bluesky network map</h1>
+        <h1>Bluesky network map</h1>
 
-<div id="status-box">
-    <p id="status-text"></p>
+        <div id="status-box">
+            <p id="status-text"></p>
+        </div>
+    </div>
+
+    <div id="controls">
+        <div>Node sizes</div>
+        <div>
+            PDSs (accounts): Linear
+            <label class="switch">
+                <input type="checkbox" id="pds-size-log">
+                <span class="slider round"></span>
+            </label>
+            Log
+        </div>
+        <div>
+            Relays (rate): Linear
+            <label class="switch">
+                <input type="checkbox" id="relay-size-log" checked>
+                <span class="slider round"></span>
+            </label>
+            Log
+        </div>
+        <div>
+            Labelers (likes): Linear
+            <label class="switch">
+                <input type="checkbox" id="labeler-size-log">
+                <span class="slider round"></span>
+            </label>
+            Log
+        </div>
+        <div>
+            Feeds (likes): Linear
+            <label class="switch">
+                <input type="checkbox" id="feed-size-log">
+                <span class="slider round"></span>
+            </label>
+            Log
+        </div>
+        <div>
+            AppViews (rate): Linear
+            <label class="switch">
+                <input type="checkbox" id="appview-size-log" checked>
+                <span class="slider round"></span>
+            </label>
+            Log
+        </div>
+    </div>
 </div>
 
 <div id="atproto-map"></div>
@@ -84,6 +209,14 @@
         AppViews: "AppView",
     };
 
+    const sizeLog = {
+        PDSs: document.getElementById('pds-size-log'),
+        Relays: document.getElementById('relay-size-log'),
+        Labelers: document.getElementById('labeler-size-log'),
+        Feeds: document.getElementById('feed-size-log'),
+        AppViews: document.getElementById('appview-size-log'),
+    };
+
     function graphMap(map) {
         // Create a graphology graph
         const graph = new graphology.Graph();
@@ -93,7 +226,8 @@
                 group: groups[node.group],
                 subgroup: node.subgroup,
                 label: node.label,
-                size: node.size,
+                lin_size: node.lin_size,
+                log_size: node.log_size,
                 color: node.bsky_operated ? bskyColour : colours[node.group],
             });
         });
@@ -116,27 +250,53 @@
             }
         });
 
-        // Position the graph nodes
-        graphologyLibrary.layout.circlepack.assign(graph, {
-            hierarchyAttributes: ["kind", "group", "subgroup"],
-        });
+        function updateNodeSizesAndPositions() {
+            // Update the node sizes
+            graph.forEachNode((node, atts) => {
+                atts.size = sizeLog[atts.group].checked ? atts.log_size : atts.lin_size;
+            });
 
-        // Calculate each cluster's nodes barycenter to use for the cluster's label position
-        graph.forEachNode((node, atts) => {
-            const cluster = groupClusters[atts.group];
-            cluster.positions.push({ x: atts.x, y: atts.y });
-        });
-        for (const group in groupClusters) {
-            const cluster = groupClusters[group];
-            cluster.x = cluster.positions.reduce((acc, p) => acc + p.x, 0) / cluster.positions.length;
-            cluster.y = cluster.positions.reduce((acc, p) => acc + p.y, 0) / cluster.positions.length;
+            // Position the graph nodes
+            graphologyLibrary.layout.circlepack.assign(graph, {
+                hierarchyAttributes: ["kind", "group", "subgroup"],
+            });
+
+            // Calculate each cluster's nodes barycenter to use for the cluster's label position
+            for (const group in groupClusters) {
+                const cluster = groupClusters[group];
+                cluster.positions = [];
+            }
+            graph.forEachNode((node, atts) => {
+                const cluster = groupClusters[atts.group];
+                cluster.positions.push({ x: atts.x, y: atts.y });
+            });
+            for (const group in groupClusters) {
+                const cluster = groupClusters[group];
+                cluster.x = cluster.positions.reduce((acc, p) => acc + p.x, 0) / cluster.positions.length;
+                cluster.y = cluster.positions.reduce((acc, p) => acc + p.y, 0) / cluster.positions.length;
+            }
         }
+        updateNodeSizesAndPositions();
 
         // Instantiate sigma.js and render the graph
         const container = document.getElementById("atproto-map");
         const renderer = new Sigma(graph, container, {
             labelRenderedSizeThreshold: 1000000
         });
+
+        // Bind the size controls:
+        for (const group in sizeLog) {
+            const control = sizeLog[group];
+            control.addEventListener('change', () => {
+                updateNodeSizesAndPositions();
+
+                // Refresh rendering
+                renderer.refresh({
+                    // We don't touch the graph data so we can skip its reindexation
+                    skipIndexation: true,
+                });
+            })
+        }
 
         // Create the clustersLabel layer
         const clustersLayer = document.createElement("div");
@@ -274,7 +434,7 @@
             return response.json();
         })
         .then((map) => {
-            statusText.textContent = "Node sizes are logarithmic (PDSs: accounts, relays: bandwidth, labelers and feeds: likes). Click on a node to toggle selection. Services operates by Bluesky PBC are in light blue. Feeds cluster is very incomplete (missing data source).";
+            statusText.textContent = "Click on a node to toggle selection. Services operates by Bluesky PBC are in light blue. Feeds cluster is very incomplete (missing data source).";
             graphMap(map);
         })
         .catch((error) => {

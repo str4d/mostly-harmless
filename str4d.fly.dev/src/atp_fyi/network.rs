@@ -232,19 +232,33 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
 }
 
 struct NodeScale {
+    lin_area_scale: f64,
+    lin_floor_offset: f64,
     log_area_scale: f64,
     log_floor_offset: f64,
 }
 
 impl NodeScale {
-    fn new(min_val: f64, max_val: f64) -> Self {
-        let log_area_scale = (NODE_MAX_AREA - NODE_MIN_AREA) / (max_val / min_val).log2();
-        let log_floor_offset = NODE_MIN_AREA - log_area_scale * min_val.log2();
+    fn new(lin_min_val: f64, log_min_val: f64, max_val: f64) -> Self {
+        let lin_area_scale = (NODE_MAX_AREA - NODE_MIN_AREA) / (max_val / lin_min_val);
+        let lin_floor_offset = NODE_MIN_AREA - lin_area_scale * lin_min_val;
+
+        let log_area_scale = (NODE_MAX_AREA - NODE_MIN_AREA) / (max_val / log_min_val).log2();
+        let log_floor_offset = NODE_MIN_AREA - log_area_scale * log_min_val.log2();
 
         Self {
+            lin_area_scale,
+            lin_floor_offset,
             log_area_scale,
             log_floor_offset,
         }
+    }
+
+    fn lin_radius(&self, value: f64) -> f64 {
+        // We want to scale the node area by value. Sigma.js only has a radius control, so
+        // we convert from area to radius afterwards.
+        let area = self.lin_floor_offset + self.lin_area_scale * value;
+        area.sqrt()
     }
 
     fn log_radius(&self, value: f64) -> f64 {
@@ -292,11 +306,11 @@ impl NodeBuilder {
             .unwrap_or(0);
 
         Self {
-            pds_scale: NodeScale::new(1.0, total_pds_users as f64),
-            relay_scale: NodeScale::new(0.01, max_relay_rate),
-            labeler_scale: NodeScale::new(1.0, max_labeler_likes as f64),
-            feed_scale: NodeScale::new(min_feed_likes as f64, max_feed_likes as f64),
-            app_view_scale: NodeScale::new(1.0, max_relay_rate as f64),
+            pds_scale: NodeScale::new(1.0, 1.0, total_pds_users as f64),
+            relay_scale: NodeScale::new(0.01, 0.01, max_relay_rate),
+            labeler_scale: NodeScale::new(1.0, 1.0, max_labeler_likes as f64),
+            feed_scale: NodeScale::new(1.0, min_feed_likes as f64, max_feed_likes as f64),
+            app_view_scale: NodeScale::new(1.0, 1.0, max_relay_rate as f64),
             total_pds_accounts: total_pds_users,
         }
     }
@@ -321,7 +335,8 @@ impl NodeBuilder {
             group,
             subgroup,
             label,
-            size: scale.log_radius(value),
+            lin_size: scale.lin_radius(value),
+            log_size: scale.log_radius(value),
             bsky_operated,
         }
     }
@@ -450,7 +465,8 @@ struct Node {
     group: Group,
     subgroup: String,
     label: String,
-    size: f64,
+    lin_size: f64,
+    log_size: f64,
     bsky_operated: bool,
 }
 
