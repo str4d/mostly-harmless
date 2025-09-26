@@ -133,9 +133,13 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
     // Add the known appviews.
     // Hard-coded for now.
     let appview_bsky = add_node(node_builder.app_view("Bluesky".into(), rates.ops_bluesky));
+    let appview_blacksky = add_node(node_builder.app_view("Blacksky".into(), rates.ops_bluesky));
+    let appview_anisota = add_node(node_builder.app_view("anisota".into(), rates.ops_anisota));
     let appview_flashes = add_node(node_builder.app_view("Flashes".into(), rates.ops_flashes));
     let appview_frontpage =
         add_node(node_builder.app_view("Frontpage".into(), rates.ops_frontpage));
+    let appview_grain = add_node(node_builder.app_view("Grain".into(), rates.ops_grain));
+    let appview_leaflet = add_node(node_builder.app_view("Leaflet".into(), rates.ops_leaflet));
     let appview_linkat = add_node(node_builder.app_view("Linkat".into(), rates.ops_linkat));
     let appview_picosky = add_node(node_builder.app_view("Picosky".into(), rates.ops_picosky));
     let appview_pinksky = add_node(node_builder.app_view("Pinksky".into(), rates.ops_pinksky));
@@ -149,6 +153,7 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
     let appview_streamplace =
         add_node(node_builder.app_view("Streamplace".into(), rates.ops_streamplace));
     let appview_tangled = add_node(node_builder.app_view("Tangled".into(), rates.ops_tangled));
+    let appview_tealfm = add_node(node_builder.app_view("teal.fm".into(), rates.ops_tealfm));
     let appview_whitewind =
         add_node(node_builder.app_view("White Wind".into(), rates.ops_whitewind));
 
@@ -203,7 +208,12 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
             .iter()
             .enumerate()
             .filter(|(_, n)| matches!(n.group, Group::Labeler))
-            .flat_map(|(labeler, _)| [edge_builder.labeler_to_app_view(labeler, appview_bsky)]),
+            .flat_map(|(labeler, _)| {
+                [
+                    edge_builder.labeler_to_app_view(labeler, appview_bsky),
+                    edge_builder.labeler_to_app_view(labeler, appview_blacksky),
+                ]
+            }),
     );
 
     // Add edges from the relay to the appviews.
@@ -211,8 +221,11 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
     edges.extend(bsky_relays.into_iter().flat_map(|relay| {
         [
             edge_builder.relay_to_app_view(relay, appview_bsky, rates.ops_bluesky),
+            edge_builder.relay_to_app_view(relay, appview_anisota, rates.ops_anisota),
             edge_builder.relay_to_app_view(relay, appview_flashes, rates.ops_flashes),
             edge_builder.relay_to_app_view(relay, appview_frontpage, rates.ops_frontpage),
+            edge_builder.relay_to_app_view(relay, appview_grain, rates.ops_grain),
+            edge_builder.relay_to_app_view(relay, appview_leaflet, rates.ops_leaflet),
             edge_builder.relay_to_app_view(relay, appview_linkat, rates.ops_linkat),
             edge_builder.relay_to_app_view(relay, appview_picosky, rates.ops_picosky),
             edge_builder.relay_to_app_view(relay, appview_pinksky, rates.ops_pinksky),
@@ -224,9 +237,11 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
             edge_builder.relay_to_app_view(relay, appview_sonasky, rates.ops_sonasky),
             edge_builder.relay_to_app_view(relay, appview_streamplace, rates.ops_streamplace),
             edge_builder.relay_to_app_view(relay, appview_tangled, rates.ops_tangled),
+            edge_builder.relay_to_app_view(relay, appview_tealfm, rates.ops_tealfm),
             edge_builder.relay_to_app_view(relay, appview_whitewind, rates.ops_whitewind),
         ]
     }));
+    edges.push(edge_builder.relay_to_app_view(blacksky_relay, appview_blacksky, rates.ops_bluesky));
 
     Ok(Map { nodes, edges })
 }

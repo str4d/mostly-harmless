@@ -17,6 +17,7 @@ pub(super) async fn enumerate(client: &reqwest::Client) -> Result<Network, Error
         Relay::new("Bluesky Relay US East", "US", "relay1.us-east.bsky.network"),
         Relay::new("Bluesky Relay US West", "US", "relay1.us-west.bsky.network"),
         Relay::new("Blacksky Relay US", "US", "atproto.africa"),
+        // --- Above this line we rely on fixed ordering in the renderer. ---
         Relay::new("feeds.blue Relay EU", "EU", "relay.feeds.blue"),
         Relay::new("Cerulea Relay EU", "EU", "relay.cerulea.blue"),
         // Relay::new("Ducky Relay EU", "EU", "relay.zio.blue"),
@@ -26,6 +27,7 @@ pub(super) async fn enumerate(client: &reqwest::Client) -> Result<Network, Error
         // Relay::new("pear.cat Relay US", "US", "relayh.pear.cat"),
         // Relay::new("Spark Relay US", "US", "relay.sprk.so"),
         Relay::new("syu.is Relay", "JP", "bgs.syu.is"),
+        Relay::new("Upcloud Relay Poland", "EU", "relay.upcloud.world"),
         Relay::new("bnewbold Demo Relay US", "US", "relay-ovh.demo.bsky.dev"),
     ];
 
