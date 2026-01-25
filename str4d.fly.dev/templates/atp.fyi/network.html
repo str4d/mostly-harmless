@@ -122,9 +122,8 @@
 {% macro control(id, label, default_log) %}
 <div>
     {{ label }}: Linear
-    <label class="switch">
-        <input type="checkbox" id="{{ id }}"{% if default_log %} checked{% endif %}>
-        <span class="slider round"></span>
+    <label>
+        <input type="range" id="{{ id }}" min="0" max="1" value="{% if default_log %}1{% else %}0{% endif %}">
     </label>
     Log
 </div>
@@ -202,8 +201,7 @@
                 group: groups[node.group],
                 subgroup: node.subgroup,
                 label: node.label,
-                lin_size: node.lin_size,
-                log_size: node.log_size,
+                logish_sizes: node.logish_sizes,
                 color: node.bsky_operated ? bskyColour : colours[node.group],
             });
         });
@@ -229,7 +227,7 @@
         function updateNodeSizesAndPositions() {
             // Update the node sizes
             graph.forEachNode((node, atts) => {
-                atts.size = sizeLog[atts.group].checked ? atts.log_size : atts.lin_size;
+                atts.size = atts.logish_sizes[sizeLog[atts.group].valueAsNumber];
             });
 
             // Position the graph nodes
@@ -263,7 +261,7 @@
         // Bind the size controls:
         for (const group in sizeLog) {
             const control = sizeLog[group];
-            control.addEventListener('change', () => {
+            control.addEventListener('input', () => {
                 updateNodeSizesAndPositions();
 
                 // Refresh rendering

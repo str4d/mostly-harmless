@@ -380,8 +380,7 @@ impl NodeBuilder {
             group,
             subgroup,
             label,
-            lin_size: scale.lin_radius(value),
-            log_size: scale.log_radius(value),
+            logish_sizes: vec![scale.lin_radius(value), scale.log_radius(value)],
             bsky_operated,
         }
     }
@@ -517,8 +516,8 @@ struct Node {
     group: Group,
     subgroup: String,
     label: String,
-    lin_size: f64,
-    log_size: f64,
+    /// First entry is linear scale, last entry is log scale.
+    logish_sizes: Vec<f64>,
     bsky_operated: bool,
 }
 
