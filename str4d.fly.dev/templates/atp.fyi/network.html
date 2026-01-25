@@ -119,11 +119,11 @@
 <script src="https://github.com/graphology/graphology/releases/download/0.26.0/graphology-library.min.js"></script>
 {% endblock %}
 
-{% macro control(id, label, default_log) %}
+{% macro control(id, label, default) %}
 <div>
     {{ label }}: Linear
     <label>
-        <input type="range" id="{{ id }}" min="0" max="1" value="{% if default_log %}1{% else %}0{% endif %}">
+        <input type="range" id="{{ id }}" min="0" max="5" value="{{ default }}">
     </label>
     Log
 </div>
@@ -143,11 +143,11 @@
 
     <div id="controls">
         <div>Node sizes</div>
-        {{ control("pds-size-log", "PDSs (accounts)", false) }}
-        {{ control("relay-size-log", "Relays (rate)", true) }}
-        {{ control("labeler-size-log", "Labelers (likes)", false) }}
-        {{ control("feed-size-log", "Feeds (likes)", false) }}
-        {{ control("appview-size-log", "AppViews (rate)", true) }}
+        {{ control("pds-size-log", "PDSs (accounts)", 2) }}
+        {{ control("relay-size-log", "Relays (rate)", 5) }}
+        {{ control("labeler-size-log", "Labelers (likes)", 1) }}
+        {{ control("feed-size-log", "Feeds (likes)", 0) }}
+        {{ control("appview-size-log", "AppViews (rate)", 5) }}
     </div>
 </div>
 

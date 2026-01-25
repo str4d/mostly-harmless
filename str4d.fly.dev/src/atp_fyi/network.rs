@@ -270,40 +270,65 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
     Ok(Map { nodes, edges })
 }
 
+struct LogishNodeScale {
+    area_scale: f64,
+    floor_offset: f64,
+}
+
 struct NodeScale {
-    lin_area_scale: f64,
-    lin_floor_offset: f64,
-    log_area_scale: f64,
-    log_floor_offset: f64,
+    logish: Vec<(f64, LogishNodeScale)>,
+    log: LogishNodeScale,
 }
 
 impl NodeScale {
     fn new(lin_min_val: f64, log_min_val: f64, max_val: f64) -> Self {
-        let lin_area_scale = (NODE_MAX_AREA - NODE_MIN_AREA) / (max_val / lin_min_val);
-        let lin_floor_offset = NODE_MIN_AREA - lin_area_scale * lin_min_val;
+        // Approximate 1 - sqrt(x/5) to get smoothish area scaling.
+        let logish = [1.0, 0.55, 0.37, 0.23, 0.11]
+            .into_iter()
+            .map(|n| {
+                let min_val_n = lin_min_val.powf(n);
+                let area_scale = (NODE_MAX_AREA - NODE_MIN_AREA) / (max_val.powf(n) / min_val_n);
+                let floor_offset = NODE_MIN_AREA - area_scale * min_val_n;
+
+                (
+                    n,
+                    LogishNodeScale {
+                        area_scale,
+                        floor_offset,
+                    },
+                )
+            })
+            .collect();
 
         let log_area_scale = (NODE_MAX_AREA - NODE_MIN_AREA) / (max_val / log_min_val).log2();
         let log_floor_offset = NODE_MIN_AREA - log_area_scale * log_min_val.log2();
 
         Self {
-            lin_area_scale,
-            lin_floor_offset,
-            log_area_scale,
-            log_floor_offset,
+            logish,
+            log: LogishNodeScale {
+                area_scale: log_area_scale,
+                floor_offset: log_floor_offset,
+            },
         }
     }
 
-    fn lin_radius(&self, value: f64) -> f64 {
+    fn radius(&self, value: f64) -> Vec<f64> {
         // We want to scale the node area by value. Sigma.js only has a radius control, so
         // we convert from area to radius afterwards.
-        let area = self.lin_floor_offset + self.lin_area_scale * value;
-        area.sqrt()
+        self.logish
+            .iter()
+            .map(|(n, scale)| {
+                let area = scale.floor_offset + scale.area_scale * value.powf(*n);
+                area.sqrt()
+            })
+            .chain(Some(self.log_radius(value)))
+            .collect()
     }
 
     fn log_radius(&self, value: f64) -> f64 {
         // We want to scale the node area by value. Sigma.js only has a radius control, so
         // we convert from area to radius afterwards.
-        let area = self.log_floor_offset + self.log_area_scale * value.log2();
+        let area = self.log.floor_offset + self.log.area_scale * value.log2();
         area.sqrt()
     }
 }
@@ -380,7 +405,7 @@ impl NodeBuilder {
             group,
             subgroup,
             label,
-            logish_sizes: vec![scale.lin_radius(value), scale.log_radius(value)],
+            logish_sizes: scale.radius(value),
             bsky_operated,
         }
     }
