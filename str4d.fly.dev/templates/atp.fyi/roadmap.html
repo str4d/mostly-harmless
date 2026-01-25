@@ -39,19 +39,19 @@
 {% when Some with (roadmap) %}
 <h2>Discussing</h2>
 <p>They've seen the request and they're talking about it!</p>
-{% call roadmap_issues(roadmap.discussing) %}
+{{ roadmap_issues(roadmap.discussing) }}
 
 <h2>Planned</h2>
 <p>They're on it! These will likely happen in the near term.</p>
-{% call roadmap_issues(roadmap.planned) %}
+{{ roadmap_issues(roadmap.planned) }}
 
 <h2>On the roadmap</h2>
 <p>They're planning to do these, but it may be a while.</p>
-{% call roadmap_issues(roadmap.on_roadmap) %}
+{{ roadmap_issues(roadmap.on_roadmap) }}
 
 <h2>Putting off</h2>
 <p>Issues they can't deal with right now.</p>
-{% call roadmap_issues(roadmap.putting_off) %}
+{{ roadmap_issues(roadmap.putting_off) }}
 
 {% when None %}
 <h2>Error: Failed to load issues from GitHub ☹️</h2>
