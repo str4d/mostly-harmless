@@ -82,7 +82,7 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
             + network.labelers.len()
             + network.feeds.len()
             // AppViews (see below)
-            + 15,
+            + 24,
     );
 
     let mut add_node = |node| {
