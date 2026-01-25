@@ -144,17 +144,24 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
     let appview_bsky = add_node(node_builder.app_view("Bluesky".into(), rates.ops_bluesky));
     let appview_blacksky = add_node(node_builder.app_view("Blacksky".into(), rates.ops_bluesky));
     let appview_anisota = add_node(node_builder.app_view("anisota".into(), rates.ops_anisota));
+    let appview_blatball = add_node(node_builder.app_view("Blatball".into(), rates.ops_blatball));
+    let appview_blento = add_node(node_builder.app_view("blento".into(), rates.ops_blento));
+    let appview_deckbelcher =
+        add_node(node_builder.app_view("deck belcher".into(), rates.ops_deckbelcher));
     let appview_flashes = add_node(node_builder.app_view("Flashes".into(), rates.ops_flashes));
     let appview_frontpage =
         add_node(node_builder.app_view("Frontpage".into(), rates.ops_frontpage));
     let appview_grain = add_node(node_builder.app_view("Grain".into(), rates.ops_grain));
-    let appview_leaflet = add_node(node_builder.app_view("Leaflet".into(), rates.ops_leaflet));
+    let appview_leaflet = add_node(
+        node_builder.app_view("Leaflet".into(), rates.ops_standardsite + rates.ops_leaflet),
+    );
     let appview_linkat = add_node(node_builder.app_view("Linkat".into(), rates.ops_linkat));
     let appview_picosky = add_node(node_builder.app_view("Picosky".into(), rates.ops_picosky));
     let appview_pinksky = add_node(node_builder.app_view("Pinksky".into(), rates.ops_pinksky));
     let appview_popsky = add_node(node_builder.app_view("Popsky".into(), rates.ops_popsky));
     let appview_rocksky = add_node(node_builder.app_view("Rocksky".into(), rates.ops_rocksky));
     let appview_roomy = add_node(node_builder.app_view("Roomy".into(), rates.ops_roomy));
+    let appview_semble = add_node(node_builder.app_view("Semble".into(), rates.ops_semble));
     let appview_skyspace = add_node(node_builder.app_view("SkySpace".into(), rates.ops_skyspace));
     let appview_smokesignal =
         add_node(node_builder.app_view("Smoke Signal".into(), rates.ops_smokesignal));
@@ -231,16 +238,24 @@ pub(super) async fn render_map(client: &reqwest::Client) -> Result<Map, Error> {
         [
             edge_builder.relay_to_app_view(relay, appview_bsky, rates.ops_bluesky),
             edge_builder.relay_to_app_view(relay, appview_anisota, rates.ops_anisota),
+            edge_builder.relay_to_app_view(relay, appview_blatball, rates.ops_blatball),
+            edge_builder.relay_to_app_view(relay, appview_blento, rates.ops_blento),
+            edge_builder.relay_to_app_view(relay, appview_deckbelcher, rates.ops_deckbelcher),
             edge_builder.relay_to_app_view(relay, appview_flashes, rates.ops_flashes),
             edge_builder.relay_to_app_view(relay, appview_frontpage, rates.ops_frontpage),
             edge_builder.relay_to_app_view(relay, appview_grain, rates.ops_grain),
-            edge_builder.relay_to_app_view(relay, appview_leaflet, rates.ops_leaflet),
+            edge_builder.relay_to_app_view(
+                relay,
+                appview_leaflet,
+                rates.ops_standardsite + rates.ops_leaflet,
+            ),
             edge_builder.relay_to_app_view(relay, appview_linkat, rates.ops_linkat),
             edge_builder.relay_to_app_view(relay, appview_picosky, rates.ops_picosky),
             edge_builder.relay_to_app_view(relay, appview_pinksky, rates.ops_pinksky),
             edge_builder.relay_to_app_view(relay, appview_popsky, rates.ops_popsky),
             edge_builder.relay_to_app_view(relay, appview_rocksky, rates.ops_rocksky),
             edge_builder.relay_to_app_view(relay, appview_roomy, rates.ops_roomy),
+            edge_builder.relay_to_app_view(relay, appview_semble, rates.ops_semble),
             edge_builder.relay_to_app_view(relay, appview_skyspace, rates.ops_skyspace),
             edge_builder.relay_to_app_view(relay, appview_smokesignal, rates.ops_smokesignal),
             edge_builder.relay_to_app_view(relay, appview_sonasky, rates.ops_sonasky),
