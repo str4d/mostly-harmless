@@ -37,7 +37,7 @@ pub(super) async fn get_proposals() -> Result<Vec<Proposal>, Error> {
         .flat_map(|issue| Proposal::new(issue))
         .collect::<Vec<_>>();
 
-    proposals.sort_by_key(|issue| (issue.number));
+    proposals.sort_by_key(|issue| issue.number);
 
     Ok(proposals)
 }
