@@ -119,6 +119,17 @@
 <script src="https://github.com/graphology/graphology/releases/download/0.26.0/graphology-library.min.js"></script>
 {% endblock %}
 
+{% macro control(id, label, default_log) %}
+<div>
+    {{ label }}: Linear
+    <label class="switch">
+        <input type="checkbox" id="{{ id }}"{% if default_log %} checked{% endif %}>
+        <span class="slider round"></span>
+    </label>
+    Log
+</div>
+{% endmacro %}
+
 {% block content %}
 <div id="topbar">
     <div id="toptext">
@@ -133,46 +144,11 @@
 
     <div id="controls">
         <div>Node sizes</div>
-        <div>
-            PDSs (accounts): Linear
-            <label class="switch">
-                <input type="checkbox" id="pds-size-log">
-                <span class="slider round"></span>
-            </label>
-            Log
-        </div>
-        <div>
-            Relays (rate): Linear
-            <label class="switch">
-                <input type="checkbox" id="relay-size-log" checked>
-                <span class="slider round"></span>
-            </label>
-            Log
-        </div>
-        <div>
-            Labelers (likes): Linear
-            <label class="switch">
-                <input type="checkbox" id="labeler-size-log">
-                <span class="slider round"></span>
-            </label>
-            Log
-        </div>
-        <div>
-            Feeds (likes): Linear
-            <label class="switch">
-                <input type="checkbox" id="feed-size-log">
-                <span class="slider round"></span>
-            </label>
-            Log
-        </div>
-        <div>
-            AppViews (rate): Linear
-            <label class="switch">
-                <input type="checkbox" id="appview-size-log" checked>
-                <span class="slider round"></span>
-            </label>
-            Log
-        </div>
+        {{ control("pds-size-log", "PDSs (accounts)", false) }}
+        {{ control("relay-size-log", "Relays (rate)", true) }}
+        {{ control("labeler-size-log", "Labelers (likes)", false) }}
+        {{ control("feed-size-log", "Feeds (likes)", false) }}
+        {{ control("appview-size-log", "AppViews (rate)", true) }}
     </div>
 </div>
 
