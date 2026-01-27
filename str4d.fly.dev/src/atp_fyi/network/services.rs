@@ -26,8 +26,11 @@ pub(super) async fn enumerate(client: &reqwest::Client) -> Result<Network, Error
         Relay::new("microcosm Relay France", "EU", "relay3.fr.hose.cam"),
         // Relay::new("pear.cat Relay US", "US", "relayh.pear.cat"),
         // Relay::new("Spark Relay US", "US", "relay.sprk.so"),
-        Relay::new("syu.is Relay", "JP", "bgs.syu.is"),
+        Relay::new("syu.is Relay", "Asia", "bgs.syu.is"),
         Relay::new("Upcloud Relay Poland", "EU", "relay.upcloud.world"),
+        Relay::new("firehose.network US", "US", "northamerica.firehose.network"),
+        Relay::new("firehose.network EU", "EU", "europe.firehose.network"),
+        Relay::new("firehose.network Asia", "Asia", "asia.firehose.network"),
         Relay::new("bnewbold Demo Relay US", "US", "relay-ovh.demo.bsky.dev"),
     ];
 
