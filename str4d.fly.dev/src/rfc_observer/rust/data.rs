@@ -1,4 +1,4 @@
-use std::{cell::OnceCell, collections::BTreeMap, str::FromStr};
+use std::{collections::BTreeMap, str::FromStr, sync::OnceLock};
 
 use chrono::{DateTime, NaiveDate, Utc};
 use phf::phf_map;
@@ -31,10 +31,10 @@ static RFC_FOR_ISSUE: phf::Map<i64, u32> = phf_map! {
     91399_i64 => 3173,
 };
 
-const RE_RFC_PR: OnceCell<Regex> = OnceCell::new();
-const RE_RFC_TEXT: OnceCell<Regex> = OnceCell::new();
-const RE_RFC_RENDERED: OnceCell<Regex> = OnceCell::new();
-const RE_RFC_TITLE: OnceCell<Regex> = OnceCell::new();
+static RE_RFC_PR: OnceLock<Regex> = OnceLock::new();
+static RE_RFC_TEXT: OnceLock<Regex> = OnceLock::new();
+static RE_RFC_RENDERED: OnceLock<Regex> = OnceLock::new();
+static RE_RFC_TITLE: OnceLock<Regex> = OnceLock::new();
 
 #[derive(Clone, Debug, Serialize)]
 pub(super) struct TrackingIssue {
