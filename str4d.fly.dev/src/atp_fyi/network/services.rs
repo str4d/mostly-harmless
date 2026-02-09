@@ -31,6 +31,7 @@ pub(super) async fn enumerate(client: &reqwest::Client) -> Result<Network, Error
         Relay::new("firehose.network US", "US", "northamerica.firehose.network"),
         Relay::new("firehose.network EU", "EU", "europe.firehose.network"),
         Relay::new("firehose.network Asia", "Asia", "asia.firehose.network"),
+        Relay::new("xero.systems Montreal", "CA", "relay.xero.systems"),
         Relay::new("bnewbold Demo Relay US", "US", "relay-ovh.demo.bsky.dev"),
     ];
 
