@@ -17,6 +17,7 @@ mod rfc_observer;
 mod siso_dev;
 mod sssh;
 mod str4d_xyz;
+mod zcash_zip;
 
 #[tokio::main]
 async fn main() {
@@ -80,6 +81,7 @@ async fn main() {
         .handle("ietf.rfc.observer", rfc_observer::ietf::build())
         .handle("go.rfc.observer", rfc_observer::go::build())
         .handle("rust.rfc.observer", rfc_observer::rust::build())
+        .handle("zcash.zip", zcash_zip::build())
         .layer(Extension(client))
         .layer(util::MetricsLayer::new())
         .layer(TraceLayer::new_for_http());
